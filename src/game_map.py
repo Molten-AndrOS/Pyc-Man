@@ -1,5 +1,3 @@
-from tkinter.constants import LEFT
-
 import pygame
 import math
 
