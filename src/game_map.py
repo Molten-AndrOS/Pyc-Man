@@ -71,7 +71,7 @@ class GameMap:
                     # Wall with gradient effect
                     pygame.draw.rect(screen, BLUE, (px, py, TILE_SIZE, TILE_SIZE))
                     pygame.draw.rect(screen, (50, 50, 255), (px, py, TILE_SIZE, TILE_SIZE), 2)
-                    pygame.draw.rect(screen, (20, 20, 180), (px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4), 1)
+                    #pygame.draw.rect(screen, (20, 20, 180), (px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4), 1)
 
                 elif cell == 2:
                     # Pellet with glow
