@@ -1,8 +1,11 @@
+"""Simple File to render screen"""
+
 import pygame
 from src.game_map import GameMap
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, BLACK
 
 def map_renderer():
+    """Main function"""
     pygame.init()
 
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -13,6 +16,7 @@ def map_renderer():
 
     running = True
     while running:
+        """Main Loop"""
         clock.tick(FPS)
 
         for event in pygame.event.get():
@@ -26,4 +30,5 @@ def map_renderer():
     pygame.quit()
 
 if __name__ == "__main__":
+    """Main Executor"""
     map_renderer()

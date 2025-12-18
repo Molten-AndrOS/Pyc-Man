@@ -10,6 +10,7 @@ from src.game_map import GameMap
 class TestGameMap:
     """Test suite for GameMap class."""
 
+    @pytest.fixture
     def setup_method(self):
         """Create a fresh GameMap before each test."""
         self.game_map = GameMap()

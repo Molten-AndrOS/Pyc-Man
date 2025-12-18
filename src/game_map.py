@@ -1,4 +1,4 @@
-"""Module for managing the Pac-Man game map."""
+"""Module for managing the Pac-Man game map"""
 
 import math
 import pygame
@@ -7,7 +7,7 @@ from src.settings import TILE_SIZE, BLUE, WHITE
 
 
 class GameMap:
-    """Represents the Pac-Man game map with walls, pellets, and power pellets."""
+    """Represents the Pac-Man game map with walls, pellets, and power pellets"""
 
     tunnel_left_position = (0, 10)
     tunnel_right_position = (18, 10)
@@ -41,37 +41,35 @@ class GameMap:
         self.initial_pellets = self._count_pellets()
 
     def _count_pellets(self) -> int:
-        """Count total pellets in the map."""
+        """Count total pellets in the map"""
         return sum(cell in [2, 3] for row in self.layout for cell in row)
 
     def is_wall(self, grid_x: int, grid_y: int) -> bool:
-        """Check if position is a wall."""
+        """Check if position is a wall"""
         if 0 <= grid_y < len(self.layout) and 0 <= grid_x < len(self.layout[0]):
             return self.layout[grid_y][grid_x] == 1
         return True
 
     def get_cell(self, grid_x: int, grid_y: int) -> int:
-        """Get cell value at position."""
+        """Get cell value at position"""
         if 0 <= grid_y < len(self.layout) and 0 <= grid_x < len(self.layout[0]):
             return self.layout[grid_y][grid_x]
         return 1
 
     def set_cell(self, grid_x: int, grid_y: int, value: int):
-        """Set cell value at position."""
+        """Set cell value at position"""
         if 0 <= grid_y < len(self.layout) and 0 <= grid_x < len(self.layout[0]):
             self.layout[grid_y][grid_x] = value
 
     def draw(self, screen: pygame.Surface):
-        """Render the map."""
+        """Render the map"""
         for y, row in enumerate(self.layout):
             for x, cell in enumerate(row):
                 px, py = x * TILE_SIZE, y * TILE_SIZE
 
                 if cell == 1:
-                    # Wall with gradient effect
+                    # Wall
                     pygame.draw.rect(screen, BLUE, (px, py, TILE_SIZE, TILE_SIZE))
-                    pygame.draw.rect(screen, (50, 50, 255), (px, py, TILE_SIZE, TILE_SIZE), 2)
-                    #pygame.draw.rect(screen, (20, 20, 180), (px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4), 1)
 
                 elif cell == 2:
                     # Pellet with glow
