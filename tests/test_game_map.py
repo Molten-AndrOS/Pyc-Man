@@ -1,6 +1,7 @@
 """
 Test suite for GameMap class
 """
+# pylint: disable=redefined-outer-name
 
 import pytest
 
