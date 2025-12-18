@@ -66,4 +66,3 @@ class TestGameMap:
     def test_set_cell_out_of_bounds_does_nothing(self, game_map):
         """Setting out-of-bounds should not crash"""
         game_map.set_cell(-1, -1, 0)
-        # Test passes if no exception is raised
