@@ -26,9 +26,7 @@ class TestGameMap:
 
     def test_initial_pellet_count(self, game_map):
         """Initial pellet count should match layout"""
-        pellet_count = sum(
-            cell in (2, 3) for row in game_map.layout for cell in row
-        )
+        pellet_count = sum(cell in (2, 3) for row in game_map.layout for cell in row)
 
         assert game_map.initial_pellets == pellet_count
 

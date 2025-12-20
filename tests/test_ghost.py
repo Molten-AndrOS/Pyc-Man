@@ -130,9 +130,7 @@ class TestGhostInitialization:
         assert ghost._color == ghost_config.color
         assert ghost._name == ghost_config.name
 
-    def test_ghost_initializes_with_default_speed(
-        self, concrete_ghost: Ghost
-    ) -> None:
+    def test_ghost_initializes_with_default_speed(self, concrete_ghost: Ghost) -> None:
         """Test that ghost speed is set from settings."""
         assert concrete_ghost._speed == GHOST_SPEED
 
@@ -187,9 +185,7 @@ class TestGhostInitialization:
 class TestGhostProperties:
     """Test suite for Ghost properties."""
 
-    def test_x_property_returns_position_x(
-        self, concrete_ghost: Ghost
-    ) -> None:
+    def test_x_property_returns_position_x(self, concrete_ghost: Ghost) -> None:
         """Test that x property returns correct value."""
         concrete_ghost._position.x = 123.45
 
@@ -197,9 +193,7 @@ class TestGhostProperties:
 
         assert x == 123.45
 
-    def test_y_property_returns_position_y(
-        self, concrete_ghost: Ghost
-    ) -> None:
+    def test_y_property_returns_position_y(self, concrete_ghost: Ghost) -> None:
         """Test that y property returns correct value."""
         concrete_ghost._position.y = 678.90
 
