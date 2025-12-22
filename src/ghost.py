@@ -238,6 +238,7 @@ class Ghost(ABC):
         """Signal the ghost to start exiting from the ghost house."""
         if self._house_state == GhostHouseState.IN_HOUSE:
             self._house_state = GhostHouseState.EXITING
+
     def return_to_house(self) -> None:
         """Return ghost to spawn position in ghost house (when eaten)."""
         self._position.x = self._spawn_position.x
