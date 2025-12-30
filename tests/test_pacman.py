@@ -35,7 +35,8 @@ def test_initialization(pacman):
 
 def test_handle_input(pacman, mocker: MockerFixture):
     """Tests if keyboard input correctly sets next_direction."""
-    mock_keys = mocker.Mock()
+    # Use MagicMock because we need to support __getitem__ (indexing)
+    mock_keys = mocker.MagicMock()
 
     # Simulate pressing UP key
     def get_key(k):
