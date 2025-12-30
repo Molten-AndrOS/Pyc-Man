@@ -1,17 +1,19 @@
-# pylint: disable=missing-module-docstring
+"""
+Test suite for PacMan class.
+Uses pytest-mock for patching.
+"""
+
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
 
-import pytest
-from unittest.mock import MagicMock, patch
 import pygame
+import pytest
+from pytest_mock import MockerFixture
 
-from src.pacman import PacMan
 from src.direction import Direction
 from src.ghost import Ghost
-from src.settings import TILE_SIZE, SCREEN_WIDTH
-
-# --- Tests ---
+from src.pacman import PacMan
+from src.settings import SCREEN_WIDTH, TILE_SIZE
 
 
 @pytest.fixture
@@ -31,9 +33,9 @@ def test_initialization(pacman):
     assert pacman.speed == 2
 
 
-def test_handle_input(pacman):
+def test_handle_input(pacman, mocker: MockerFixture):
     """Tests if keyboard input correctly sets next_direction."""
-    mock_keys = MagicMock()
+    mock_keys = mocker.Mock()
 
     # Simulate pressing UP key
     def get_key(k):
@@ -41,9 +43,10 @@ def test_handle_input(pacman):
 
     mock_keys.__getitem__.side_effect = get_key
 
-    with patch("pygame.key.get_pressed", return_value=mock_keys):
-        pacman.handle_input()
-        assert pacman.next_direction == Direction.UP
+    mocker.patch("pygame.key.get_pressed", return_value=mock_keys)
+
+    pacman.handle_input()
+    assert pacman.next_direction == Direction.UP
 
 
 def test_change_direction_valid(pacman):
@@ -125,28 +128,29 @@ def test_eat_power_pellet(pacman, mock_game_map):
     assert pacman.power_up_timer > 0
 
 
-def test_ghost_collision_death(pacman):
+def test_ghost_collision_death(pacman, mocker: MockerFixture):
     """Tests dying when touching a normal ghost."""
-    ghost = MagicMock(spec=Ghost)
+    ghost = mocker.Mock(spec=Ghost)
     ghost.x = pacman.x
     ghost.y = pacman.y
     ghost.in_ghost_house = False
 
     # Suppress print output
-    with patch("builtins.print"):
-        pacman.update([ghost])
+    mocker.patch("builtins.print")
+
+    pacman.update([ghost])
 
     assert pacman.lives == 2
     assert pacman.powered_up is False
 
 
-def test_ghost_collision_eat_ghost(pacman):
+def test_ghost_collision_eat_ghost(pacman, mocker: MockerFixture):
     """Tests eating a ghost when powered up."""
     pacman.powered_up = True
     # Ensure timer is > 0
     pacman.power_up_timer = 600
 
-    ghost = MagicMock(spec=Ghost)
+    ghost = mocker.Mock(spec=Ghost)
     ghost.x = pacman.x
     ghost.y = pacman.y
     ghost.in_ghost_house = False

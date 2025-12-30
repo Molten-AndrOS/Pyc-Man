@@ -1,16 +1,19 @@
-# pylint: disable=missing-module-docstring
+"""
+Test suite for Ghost features (state, animation, drawing).
+Uses pytest-mock for patching.
+"""
+
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
+# pylint: disable=too-many-statements
 
 import pytest
-from unittest.mock import MagicMock, patch
-from src.ghost import Ghost, GhostConfig, GhostState, GhostHouseState
-from src.position import Position
+from pytest_mock import MockerFixture
+
 from src.direction import Direction
-from src.settings import TILE_SIZE, GHOST_SPEED
-
-
-# --- Fixtures ---
+from src.ghost import Ghost, GhostConfig, GhostHouseState, GhostState
+from src.position import Position
+from src.settings import GHOST_SPEED, TILE_SIZE
 
 
 @pytest.fixture
@@ -32,14 +35,14 @@ def concrete_ghost(mock_game_map, ghost_config):
         """Concrete implementation for testing."""
 
         def calculate_target(
-            self, pacman_x: float, pacman_y: float, pacman_direction: tuple[int, int]
+            self,
+            pacman_x: float,
+            pacman_y: float,
+            pacman_direction: tuple[int, int],
         ) -> tuple[float, float]:
             return pacman_x, pacman_y
 
     return TestGhost(mock_game_map, ghost_config)
-
-
-# --- Tests ---
 
 
 def test_start_frightened(concrete_ghost):
@@ -101,54 +104,57 @@ def test_animation_update(concrete_ghost):
     assert concrete_ghost._animation_frame != initial_frame
 
 
-def test_draw_normal(concrete_ghost):
+def test_draw_normal(concrete_ghost, mocker: MockerFixture):
     """Tests drawing calls in normal state."""
-    screen_mock = MagicMock()
+    screen_mock = mocker.Mock()
+    mock_circle = mocker.patch("pygame.draw.circle")
+    mock_rect = mocker.patch("pygame.draw.rect")
 
-    with patch("pygame.draw.circle") as mock_circle, patch(
-        "pygame.draw.rect"
-    ) as mock_rect:
-        concrete_ghost.draw(screen_mock)
+    concrete_ghost.draw(screen_mock)
 
-        # Should draw body (circle + rect) and feet (circles) + eyes
-        assert mock_circle.call_count >= 1
-        assert mock_rect.call_count >= 1
+    # Should draw body (circle + rect) and feet (circles) + eyes
+    assert mock_circle.call_count >= 1
+    assert mock_rect.call_count >= 1
 
-        # Check color used (Red)
-        args, _ = mock_circle.call_args_list[0]
-        assert args[1] == (255, 0, 0)
+    # Check color used (Red)
+    # call_args_list[0] is the first call, args[1] is the color
+    args, _ = mock_circle.call_args_list[0]
+    assert args[1] == (255, 0, 0)
 
 
-def test_draw_frightened(concrete_ghost):
+def test_draw_frightened(concrete_ghost, mocker: MockerFixture):
     """Tests drawing calls in frightened state."""
     concrete_ghost.start_frightened()
-    screen_mock = MagicMock()
+    screen_mock = mocker.Mock()
+    mock_circle = mocker.patch("pygame.draw.circle")
+    # We patch rect just to ensure it's called/not errored, though primarily checking color
+    mocker.patch("pygame.draw.rect")
 
-    with patch("pygame.draw.circle") as mock_circle, patch("pygame.draw.rect"):
-        concrete_ghost.draw(screen_mock)
+    concrete_ghost.draw(screen_mock)
 
-        args, _ = mock_circle.call_args_list[0]
-        # Verify it's NOT red (it is blue or white)
-        assert args[1] != (255, 0, 0)
+    args, _ = mock_circle.call_args_list[0]
+    # Verify it's NOT red (it is blue or white)
+    assert args[1] != (255, 0, 0)
 
 
-def test_draw_eaten(concrete_ghost):
+def test_draw_eaten(concrete_ghost, mocker: MockerFixture):
     """Tests drawing calls in eaten state (Only eyes)."""
     concrete_ghost.get_eaten()
-    screen_mock = MagicMock()
+    screen_mock = mocker.Mock()
+    mock_circle = mocker.patch("pygame.draw.circle")
+    mock_rect = mocker.patch("pygame.draw.rect")
 
-    with patch("pygame.draw.circle") as mock_circle, patch(
-        "pygame.draw.rect"
-    ) as mock_rect:
-        concrete_ghost.draw(screen_mock)
+    concrete_ghost.draw(screen_mock)
 
-        # Should NOT draw body rect
-        mock_rect.assert_not_called()
-        # Should draw eyes (circles)
-        assert mock_circle.call_count > 0
+    # Should NOT draw body rect
+    mock_rect.assert_not_called()
+    # Should draw eyes (circles)
+    assert mock_circle.call_count > 0
 
 
-def test_random_direction_when_frightened(concrete_ghost, mock_game_map):
+def test_random_direction_when_frightened(
+    concrete_ghost, mock_game_map, mocker: MockerFixture
+):
     """Tests that ghost picks random direction when frightened."""
     concrete_ghost.start_frightened()
 
@@ -160,9 +166,10 @@ def test_random_direction_when_frightened(concrete_ghost, mock_game_map):
     # Mock multiple available directions
     mock_game_map.is_walkable.return_value = True
 
-    with patch("random.choice") as mock_random:
-        mock_random.return_value = Direction.UP
-        concrete_ghost._choose_direction()
+    # Use mocker to patch random.choice
+    mock_choice = mocker.patch("random.choice", return_value=Direction.UP)
 
-        assert concrete_ghost._direction == Direction.UP
-        mock_random.assert_called()
+    concrete_ghost._choose_direction()
+
+    assert concrete_ghost._direction == Direction.UP
+    mock_choice.assert_called()
