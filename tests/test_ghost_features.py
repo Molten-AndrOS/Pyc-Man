@@ -2,31 +2,15 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
 
-from unittest.mock import MagicMock, patch
-
 import pytest
-
-from src.direction import Direction
-from src.game_map import GameMap
-from src.ghost import Ghost, GhostConfig, GhostHouseState, GhostState
+from unittest.mock import MagicMock, patch
+from src.ghost import Ghost, GhostConfig, GhostState, GhostHouseState
 from src.position import Position
-from src.settings import GHOST_SPEED, TILE_SIZE
+from src.direction import Direction
+from src.settings import TILE_SIZE, GHOST_SPEED
+
 
 # --- Fixtures ---
-
-
-@pytest.fixture
-def mock_game_map():
-    """Creates a mock game map."""
-    m = MagicMock(spec=GameMap)
-    m.width = 20
-    m.height = 20
-    m.is_walkable.return_value = True
-    m.grid_to_pixel.side_effect = lambda gx, gy: (
-        gx * TILE_SIZE + TILE_SIZE / 2,
-        gy * TILE_SIZE + TILE_SIZE / 2,
-    )
-    return m
 
 
 @pytest.fixture
@@ -124,7 +108,6 @@ def test_draw_normal(concrete_ghost):
     with patch("pygame.draw.circle") as mock_circle, patch(
         "pygame.draw.rect"
     ) as mock_rect:
-
         concrete_ghost.draw(screen_mock)
 
         # Should draw body (circle + rect) and feet (circles) + eyes
@@ -142,7 +125,6 @@ def test_draw_frightened(concrete_ghost):
     screen_mock = MagicMock()
 
     with patch("pygame.draw.circle") as mock_circle, patch("pygame.draw.rect"):
-
         concrete_ghost.draw(screen_mock)
 
         args, _ = mock_circle.call_args_list[0]
@@ -158,7 +140,6 @@ def test_draw_eaten(concrete_ghost):
     with patch("pygame.draw.circle") as mock_circle, patch(
         "pygame.draw.rect"
     ) as mock_rect:
-
         concrete_ghost.draw(screen_mock)
 
         # Should NOT draw body rect
@@ -170,7 +151,11 @@ def test_draw_eaten(concrete_ghost):
 def test_random_direction_when_frightened(concrete_ghost, mock_game_map):
     """Tests that ghost picks random direction when frightened."""
     concrete_ghost.start_frightened()
-    concrete_ghost._position = Position(150, 150)
+
+    # Position must be centered on a tile for _choose_direction to work
+    center_pos_x = 1 * TILE_SIZE + TILE_SIZE / 2
+    center_pos_y = 1 * TILE_SIZE + TILE_SIZE / 2
+    concrete_ghost._position = Position(center_pos_x, center_pos_y)
 
     # Mock multiple available directions
     mock_game_map.is_walkable.return_value = True

@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 """
 Test suite for Position class.
 """

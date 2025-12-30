@@ -23,12 +23,16 @@ def main() -> None:
 
     game_map = GameMap()
 
-    # Create Pac-Man
+    # --- Creazione Entità ---
+
+    # 1. Crea Pac-Man (posizionato a riga 23, colonna 14 circa)
     start_x = 14 * TILE_SIZE + TILE_SIZE / 2
-    start_y = 23 * TILE_SIZE + TILE_SIZE / 2
+    start_y = (
+        16 * TILE_SIZE + TILE_SIZE / 2
+    )  # Aggiustato per stare nella mappa visibile
     pacman = PacMan(game_map, start_x, start_y)
 
-    # Create Ghosts
+    # 2. Crea i Fantasmi
     blinky = Blinky(game_map, 14 * TILE_SIZE, 11 * TILE_SIZE)
     pinky = Pinky(game_map, 14 * TILE_SIZE, 14 * TILE_SIZE)
     inky = Inky(game_map, 12 * TILE_SIZE, 14 * TILE_SIZE, blinky)
@@ -38,31 +42,34 @@ def main() -> None:
 
     running = True
     while running:
+        # A. Gestione Eventi
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        # Input and Update
+        # B. Aggiornamento Logica (Update)
         pacman.handle_input()
         pacman.update(ghosts)
 
+        # Calcola direzione corrente per i fantasmi
         current_dir = pacman.direction.value if pacman.direction else (0, 0)
 
         for ghost in ghosts:
             ghost.update(pacman.x, pacman.y, current_dir)
 
-        # Game Over check
+        # Controllo Game Over
         if pacman.lives <= 0:
             print("Game Over")
             running = False
 
-        # Draw
+        # C. Disegno (Draw)
         screen.fill(BLACK)
-        game_map.draw(screen)
-        pacman.draw(screen)
+
+        game_map.draw(screen)  # Disegna la mappa
+        pacman.draw(screen)  # Disegna Pac-Man
 
         for ghost in ghosts:
-            ghost.draw(screen)
+            ghost.draw(screen)  # Disegna i fantasmi
 
         pygame.display.flip()
         clock.tick(FPS)

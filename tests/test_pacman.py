@@ -2,36 +2,16 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
 
-from unittest.mock import MagicMock, patch
-
-import pygame
 import pytest
+from unittest.mock import MagicMock, patch
+import pygame
 
-from src.direction import Direction
-from src.game_map import GameMap
-from src.ghost import Ghost
 from src.pacman import PacMan
-from src.settings import SCREEN_WIDTH, TILE_SIZE
+from src.direction import Direction
+from src.ghost import Ghost
+from src.settings import TILE_SIZE, SCREEN_WIDTH
 
-# --- Fixtures ---
-
-
-@pytest.fixture
-def mock_game_map():
-    """Creates a mock game map for testing."""
-    m = MagicMock(spec=GameMap)
-    m.width = 20
-    m.height = 20
-    # Default: everything is walkable
-    m.is_walkable.return_value = True
-    # Mock grid_to_pixel to return the exact center of the tile
-    m.grid_to_pixel.side_effect = lambda gx, gy: (
-        gx * TILE_SIZE + TILE_SIZE / 2,
-        gy * TILE_SIZE + TILE_SIZE / 2,
-    )
-    # Default: empty cell
-    m.get_cell.return_value = 0
-    return m
+# --- Tests ---
 
 
 @pytest.fixture
@@ -40,9 +20,6 @@ def pacman(mock_game_map):
     start_x = 1 * TILE_SIZE + TILE_SIZE / 2
     start_y = 1 * TILE_SIZE + TILE_SIZE / 2
     return PacMan(mock_game_map, start_x, start_y)
-
-
-# --- Tests ---
 
 
 def test_initialization(pacman):
@@ -166,6 +143,8 @@ def test_ghost_collision_death(pacman):
 def test_ghost_collision_eat_ghost(pacman):
     """Tests eating a ghost when powered up."""
     pacman.powered_up = True
+    # Ensure timer is > 0
+    pacman.power_up_timer = 600
 
     ghost = MagicMock(spec=Ghost)
     ghost.x = pacman.x
