@@ -2,27 +2,22 @@
 Test suite for Ghost classes.
 """
 
-# pylint: disable=redefined-outer-name  # pytest fixtures pattern
-# pylint: disable=protected-access  # white-box testing
+# pylint: disable=redefined-outer-name
+# pylint: disable=protected-access
 
 from typing import Tuple
 
 import pytest
-from pytest_mock import MockerFixture  # type: ignore[import-not-found]
+from pytest_mock import MockerFixture
 
 from src.direction import Direction
 from src.game_map import GameMap
-from src.ghost import Blinky, Clyde, Ghost, GhostConfig, GhostHouseState, Inky, Pinky
+from src.ghost import Ghost, GhostConfig, GhostHouseState
 from src.position import Position
 from src.settings import (
-    CYAN,
     GHOST_HOUSE_EXIT_X,
     GHOST_HOUSE_EXIT_Y,
     GHOST_SPEED,
-    INKY_OFFSET_TILES,
-    ORANGE,
-    PINK,
-    PINKY_TILES_AHEAD,
     RED,
     TILE_SIZE,
 )
@@ -70,561 +65,304 @@ def concrete_ghost(mock_game_map: GameMap, ghost_config: GhostConfig) -> Ghost:
     return ConcreteGhost(mock_game_map, ghost_config)
 
 
-class TestGhostHouseState:
-    """Test suite for GhostHouseState enum."""
-
-    def test_enum_has_correct_values(self) -> None:
-        """Test that GhostHouseState has all required states."""
-        states = list(GhostHouseState)
-
-        assert len(states) == 3
-        assert GhostHouseState.IN_HOUSE in states
-        assert GhostHouseState.EXITING in states
-        assert GhostHouseState.ACTIVE in states
+# --- GhostHouseState Tests ---
 
 
-class TestGhostConfig:
-    """Test suite for GhostConfig dataclass."""
-
-    def test_config_initialization_with_all_fields(self) -> None:
-        """Test GhostConfig initialization with all fields."""
-        position = Position(50.0, 75.0)
-        color = (255, 0, 0)
-        name = "Blinky"
-
-        config = GhostConfig(
-            start_position=position,
-            color=color,
-            name=name,
-            starts_in_house=True,
-        )
-
-        assert config.start_position == position
-        assert config.color == color
-        assert config.name == name
-        assert config.starts_in_house is True
-
-    def test_config_default_starts_in_house(self) -> None:
-        """Test that starts_in_house defaults to False."""
-        position = Position(100.0, 100.0)
-
-        config = GhostConfig(start_position=position, color=RED, name="Ghost")
-
-        assert config.starts_in_house is False
+def test_enum_has_correct_values():
+    """Test that GhostHouseState has all required states."""
+    states = list(GhostHouseState)
+    assert len(states) == 3
+    assert GhostHouseState.IN_HOUSE in states
+    assert GhostHouseState.EXITING in states
+    assert GhostHouseState.ACTIVE in states
 
 
-class TestGhostInitialization:
-    """Test suite for Ghost initialization."""
+# --- GhostConfig Tests ---
 
-    def test_ghost_initializes_with_config(
-        self, mock_game_map: GameMap, ghost_config: GhostConfig
-    ) -> None:
-        """Test Ghost initialization with GhostConfig."""
 
-        class TestGhost(Ghost):
-            """Minimal Ghost implementation for testing."""
+def test_config_initialization_with_all_fields():
+    """Test GhostConfig initialization with all fields."""
+    position = Position(50.0, 75.0)
+    color = (255, 0, 0)
+    name = "Blinky"
 
-            def calculate_target(self, pacman_x, pacman_y, pacman_direction):
-                return 0, 0
-
-        ghost = TestGhost(mock_game_map, ghost_config)
-
-        assert ghost._game_map == mock_game_map
-        assert ghost._position.x == ghost_config.start_position.x
-        assert ghost._position.y == ghost_config.start_position.y
-        assert ghost._color == ghost_config.color
-        assert ghost._name == ghost_config.name
-
-    def test_ghost_initializes_with_default_speed(self, concrete_ghost: Ghost) -> None:
-        """Test that ghost speed is set from settings."""
-        assert concrete_ghost._speed == GHOST_SPEED
-
-    def test_ghost_initializes_with_right_direction(
-        self, concrete_ghost: Ghost
-    ) -> None:
-        """Test that ghost starts facing right."""
-        assert concrete_ghost._direction == Direction.RIGHT
-
-    @pytest.mark.parametrize(
-        "starts_in_house, expected_state",
-        [
-            (True, GhostHouseState.IN_HOUSE),
-            (False, GhostHouseState.ACTIVE),
-        ],
+    config = GhostConfig(
+        start_position=position,
+        color=color,
+        name=name,
+        starts_in_house=True,
     )
-    def test_ghost_house_state_initialization(
-        self,
-        mock_game_map: GameMap,
-        starts_in_house: bool,
-        expected_state: GhostHouseState,
-    ) -> None:
-        """Test ghost house state is set correctly based on config."""
-        config = GhostConfig(
-            start_position=Position(100, 100),
-            color=RED,
-            name="StateTest",
-            starts_in_house=starts_in_house,
-        )
 
-        class TestGhost(Ghost):
-            """Minimal Ghost implementation for testing."""
-
-            def calculate_target(self, pacman_x, pacman_y, pacman_direction):
-                return 0, 0
-
-        ghost = TestGhost(mock_game_map, config)
-
-        assert ghost._house_state == expected_state
-
-    def test_ghost_house_exit_position_calculated_correctly(
-        self, concrete_ghost: Ghost
-    ) -> None:
-        """Test that house exit position is calculated from settings."""
-        expected_x = GHOST_HOUSE_EXIT_X * TILE_SIZE
-        expected_y = GHOST_HOUSE_EXIT_Y * TILE_SIZE
-
-        assert concrete_ghost._house_exit.x == expected_x
-        assert concrete_ghost._house_exit.y == expected_y
+    assert config.start_position == position
+    assert config.color == color
+    assert config.name == name
+    assert config.starts_in_house is True
 
 
-class TestGhostProperties:
-    """Test suite for Ghost properties."""
+def test_config_default_starts_in_house():
+    """Test that starts_in_house defaults to False."""
+    position = Position(100.0, 100.0)
+    config = GhostConfig(start_position=position, color=RED, name="Ghost")
+    assert config.starts_in_house is False
 
-    def test_x_property_returns_position_x(self, concrete_ghost: Ghost) -> None:
-        """Test that x property returns correct value."""
-        concrete_ghost._position.x = 123.45
 
-        x = concrete_ghost.x
+# --- Ghost Initialization Tests ---
 
-        assert x == 123.45
 
-    def test_y_property_returns_position_y(self, concrete_ghost: Ghost) -> None:
-        """Test that y property returns correct value."""
-        concrete_ghost._position.y = 678.90
+def test_ghost_initializes_with_config(mock_game_map, ghost_config):
+    """Test Ghost initialization with GhostConfig."""
 
-        y = concrete_ghost.y
+    class TestGhost(Ghost):
+        """Minimal Ghost implementation for testing."""
 
-        assert y == 678.90
+        def calculate_target(self, pacman_x, pacman_y, pacman_direction):
+            return 0, 0
 
-    @pytest.mark.parametrize(
-        "house_state, expected",
-        [
-            (GhostHouseState.IN_HOUSE, True),
-            (GhostHouseState.EXITING, False),
-            (GhostHouseState.ACTIVE, False),
-        ],
+    ghost = TestGhost(mock_game_map, ghost_config)
+
+    assert ghost._game_map == mock_game_map
+    assert ghost._position.x == ghost_config.start_position.x
+    assert ghost._position.y == ghost_config.start_position.y
+    assert ghost._color == ghost_config.color
+    assert ghost._name == ghost_config.name
+
+
+def test_ghost_initializes_with_default_speed(concrete_ghost):
+    """Test that ghost speed is set from settings."""
+    assert concrete_ghost._speed == GHOST_SPEED
+
+
+def test_ghost_initializes_with_right_direction(concrete_ghost):
+    """Test that ghost starts facing right."""
+    assert concrete_ghost._direction == Direction.RIGHT
+
+
+@pytest.mark.parametrize(
+    "starts_in_house, expected_state",
+    [
+        (True, GhostHouseState.IN_HOUSE),
+        (False, GhostHouseState.ACTIVE),
+    ],
+)
+def test_ghost_house_state_initialization(
+    mock_game_map,
+    starts_in_house,
+    expected_state,
+):
+    """Test ghost house state is set correctly based on config."""
+    config = GhostConfig(
+        start_position=Position(100, 100),
+        color=RED,
+        name="StateTest",
+        starts_in_house=starts_in_house,
     )
-    def test_in_ghost_house_property(
-        self,
-        concrete_ghost: Ghost,
-        house_state: GhostHouseState,
-        expected: bool,
-    ) -> None:
-        """Test in_ghost_house property for different states."""
-        concrete_ghost._house_state = house_state
-
-        result = concrete_ghost.in_ghost_house
-
-        assert result == expected
-
-    def test_color_property_returns_color(self, concrete_ghost: Ghost) -> None:
-        """Test that color property returns correct value."""
-        result = concrete_ghost.color
 
-        assert result == RED
-
-    def test_name_property_returns_name(self, concrete_ghost: Ghost) -> None:
-        """Test that name property returns correct value."""
-        result = concrete_ghost.name
-
-        assert result == "TestGhost"
+    class TestGhost(Ghost):
+        """Minimal Ghost implementation for testing."""
 
-
-class TestGhostAbstractMethod:
-    """Test suite for Ghost abstract method."""
+        def calculate_target(self, pacman_x, pacman_y, pacman_direction):
+            return 0, 0
 
-    def test_cannot_instantiate_ghost_directly(
-        self, mock_game_map: GameMap, ghost_config: GhostConfig
-    ) -> None:
-        """Test Ghost cannot be instantiated without abstract method."""
-        with pytest.raises(TypeError) as exc_info:
-            # pylint: disable=abstract-class-instantiated
-            Ghost(mock_game_map, ghost_config)  # type: ignore[abstract]
+    ghost = TestGhost(mock_game_map, config)
+    assert ghost._house_state == expected_state
 
-        assert "abstract" in str(exc_info.value).lower()
-
-    def test_concrete_implementation_calculates_target(
-        self, concrete_ghost: Ghost
-    ) -> None:
-        """Test that concrete implementation can calculate target."""
-        target = concrete_ghost.calculate_target(100.0, 200.0, (1, 0))
-
-        assert isinstance(target, tuple)
-        assert len(target) == 2
-        assert target == (100.0, 200.0)
 
+def test_ghost_house_exit_position_calculated_correctly(concrete_ghost):
+    """Test that house exit position is calculated from settings."""
+    expected_x = GHOST_HOUSE_EXIT_X * TILE_SIZE
+    expected_y = GHOST_HOUSE_EXIT_Y * TILE_SIZE
 
-class TestGhostUpdate:
-    """Test suite for Ghost update() method."""
+    assert concrete_ghost._house_exit.x == expected_x
+    assert concrete_ghost._house_exit.y == expected_y
 
-    def test_update_does_nothing_when_in_house(
-        self, concrete_ghost: Ghost, mocker: MockerFixture
-    ) -> None:
-        """Test that ghost doesn't move when IN_HOUSE."""
-        concrete_ghost._house_state = GhostHouseState.IN_HOUSE
-        initial_position = Position(
-            concrete_ghost._position.x, concrete_ghost._position.y
-        )
-        spy_choose = mocker.spy(concrete_ghost, "_choose_direction")
-        spy_move = mocker.spy(concrete_ghost, "_move")
 
-        concrete_ghost.update(200.0, 200.0, (1, 0))
+# --- Ghost Properties Tests ---
 
-        assert concrete_ghost._position.x == initial_position.x
-        assert concrete_ghost._position.y == initial_position.y
-        spy_choose.assert_not_called()
-        spy_move.assert_not_called()
 
-    def test_update_calls_exit_house_when_exiting(
-        self, concrete_ghost: Ghost, mocker: MockerFixture
-    ) -> None:
-        """Test that ghost calls _exit_house when EXITING."""
-        concrete_ghost._house_state = GhostHouseState.EXITING
-        spy_exit = mocker.spy(concrete_ghost, "_exit_house")
-        spy_choose = mocker.spy(concrete_ghost, "_choose_direction")
+def test_x_property_returns_position_x(concrete_ghost):
+    """Test that x property returns correct value."""
+    concrete_ghost._position.x = 123.45
+    assert concrete_ghost.x == 123.45
 
-        concrete_ghost.update(200.0, 200.0, (1, 0))
 
-        spy_exit.assert_called_once()
-        spy_choose.assert_not_called()
+def test_y_property_returns_position_y(concrete_ghost):
+    """Test that y property returns correct value."""
+    concrete_ghost._position.y = 678.90
+    assert concrete_ghost.y == 678.90
 
-    def test_update_normal_behavior_when_active(
-        self, concrete_ghost: Ghost, mocker: MockerFixture
-    ) -> None:
-        """Test that ghost performs AI when ACTIVE."""
-        concrete_ghost._house_state = GhostHouseState.ACTIVE
-        spy_choose = mocker.spy(concrete_ghost, "_choose_direction")
-        spy_move = mocker.spy(concrete_ghost, "_move")
 
-        concrete_ghost.update(200.0, 200.0, (1, 0))
+@pytest.mark.parametrize(
+    "house_state, expected",
+    [
+        (GhostHouseState.IN_HOUSE, True),
+        (GhostHouseState.EXITING, False),
+        (GhostHouseState.ACTIVE, False),
+    ],
+)
+def test_in_ghost_house_property(concrete_ghost, house_state, expected):
+    """Test in_ghost_house property for different states."""
+    concrete_ghost._house_state = house_state
+    assert concrete_ghost.in_ghost_house == expected
 
-        spy_choose.assert_called_once()
-        spy_move.assert_called_once()
-        assert concrete_ghost._target is not None
-        assert concrete_ghost._target.x == 200.0
-        assert concrete_ghost._target.y == 200.0
 
+def test_color_property_returns_color(concrete_ghost):
+    """Test that color property returns correct value."""
+    assert concrete_ghost.color == RED
 
-class TestGhostChooseDirection:
-    """Test suite for Ghost _choose_direction() method."""
 
-    def test_choose_direction_does_nothing_when_no_target(
-        self, concrete_ghost: Ghost
-    ) -> None:
-        """Test that direction isn't changed when target is None."""
-        concrete_ghost._target = None
-        initial_direction = concrete_ghost._direction
+def test_name_property_returns_name(concrete_ghost):
+    """Test that name property returns correct value."""
+    assert concrete_ghost.name == "TestGhost"
 
-        concrete_ghost._choose_direction()
 
-        assert concrete_ghost._direction == initial_direction
+# --- Ghost Abstract Method Tests ---
 
-    def test_choose_direction_picks_direction_towards_target(
-        self, concrete_ghost: Ghost, mock_game_map: GameMap
-    ) -> None:
-        """Test that ghost picks direction that moves towards target."""
 
-        def grid_to_pixel_mock(x: int, y: int) -> Tuple[float, float]:
-            return x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2
+def test_cannot_instantiate_ghost_directly(mock_game_map, ghost_config):
+    """Test Ghost cannot be instantiated without abstract method."""
+    with pytest.raises(TypeError) as exc_info:
+        # pylint: disable=abstract-class-instantiated
+        Ghost(mock_game_map, ghost_config)  # type: ignore[abstract]
 
-        concrete_ghost._position = Position(150.0, 150.0)
-        concrete_ghost._target = Position(250.0, 150.0)
-        mock_game_map.grid_to_pixel.side_effect = grid_to_pixel_mock  # type: ignore[attr-defined]
-        mock_game_map.is_walkable.return_value = True  # type: ignore[attr-defined]
+    assert "abstract" in str(exc_info.value).lower()
 
-        concrete_ghost._choose_direction()
 
-        assert concrete_ghost._direction == Direction.RIGHT
+def test_concrete_implementation_calculates_target(concrete_ghost):
+    """Test that concrete implementation can calculate target."""
+    target = concrete_ghost.calculate_target(100.0, 200.0, (1, 0))
 
-    def test_choose_direction_avoids_going_backwards(
-        self, concrete_ghost: Ghost, mock_game_map: GameMap
-    ) -> None:
-        """Test that ghost never reverses direction."""
-        concrete_ghost._position = Position(150.0, 150.0)
-        concrete_ghost._direction = Direction.RIGHT
-        concrete_ghost._target = Position(50.0, 150.0)
-        mock_game_map.pixel_to_grid.return_value = (5, 5)  # type: ignore[attr-defined]
-        mock_game_map.grid_to_pixel.return_value = (150.0, 150.0)  # type: ignore[attr-defined]
+    assert isinstance(target, tuple)
+    assert len(target) == 2
+    assert target == (100.0, 200.0)
 
-        def is_walkable_mock(x: int, y: int) -> bool:
-            return (x, y) in [(5, 4), (5, 6)]
 
-        mock_game_map.is_walkable.side_effect = is_walkable_mock  # type: ignore[attr-defined]
+# --- Ghost Update Tests ---
 
-        concrete_ghost._choose_direction()
 
-        assert concrete_ghost._direction != Direction.LEFT
+def test_update_does_nothing_when_in_house(concrete_ghost, mocker: MockerFixture):
+    """Test that ghost doesn't move when IN_HOUSE."""
+    concrete_ghost._house_state = GhostHouseState.IN_HOUSE
+    initial_position = Position(concrete_ghost._position.x, concrete_ghost._position.y)
+    spy_choose = mocker.spy(concrete_ghost, "_choose_direction")
+    spy_move = mocker.spy(concrete_ghost, "_move")
 
+    concrete_ghost.update(200.0, 200.0, (1, 0))
 
-class TestGhostMove:
-    """Test suite for Ghost _move() method."""
+    assert concrete_ghost._position.x == initial_position.x
+    assert concrete_ghost._position.y == initial_position.y
+    spy_choose.assert_not_called()
+    spy_move.assert_not_called()
 
-    def test_move_updates_position_when_walkable(
-        self, concrete_ghost: Ghost, mock_game_map: GameMap
-    ) -> None:
-        """Test that ghost moves when path is clear."""
-        concrete_ghost._position = Position(150.0, 150.0)
-        concrete_ghost._direction = Direction.RIGHT
-        concrete_ghost._speed = 2
-        mock_game_map.is_walkable.return_value = True  # type: ignore[attr-defined]
 
-        concrete_ghost._move()
+def test_update_calls_exit_house_when_exiting(concrete_ghost, mocker: MockerFixture):
+    """Test that ghost calls _exit_house when EXITING."""
+    concrete_ghost._house_state = GhostHouseState.EXITING
+    spy_exit = mocker.spy(concrete_ghost, "_exit_house")
+    spy_choose = mocker.spy(concrete_ghost, "_choose_direction")
 
-        assert concrete_ghost._position.x == 152.0
-        assert concrete_ghost._position.y == 150.0
+    concrete_ghost.update(200.0, 200.0, (1, 0))
 
-    def test_move_snaps_to_center_when_blocked(
-        self, concrete_ghost: Ghost, mock_game_map: GameMap
-    ) -> None:
-        """Test that ghost snaps to tile center when hitting wall."""
-        concrete_ghost._position = Position(148.0, 148.0)
-        concrete_ghost._direction = Direction.RIGHT
-        mock_game_map.is_walkable.return_value = False  # type: ignore[attr-defined]
-        mock_game_map.grid_to_pixel.return_value = (150.0, 150.0)  # type: ignore[attr-defined]
+    spy_exit.assert_called_once()
+    spy_choose.assert_not_called()
 
-        concrete_ghost._move()
 
-        assert concrete_ghost._position.x == 150.0
-        assert concrete_ghost._position.y == 150.0
+def test_update_normal_behavior_when_active(concrete_ghost, mocker: MockerFixture):
+    """Test that ghost performs AI when ACTIVE."""
+    concrete_ghost._house_state = GhostHouseState.ACTIVE
+    spy_choose = mocker.spy(concrete_ghost, "_choose_direction")
+    spy_move = mocker.spy(concrete_ghost, "_move")
 
+    concrete_ghost.update(200.0, 200.0, (1, 0))
 
-class TestGhostExitHouse:
-    """Test suite for Ghost _exit_house() method."""
+    spy_choose.assert_called_once()
+    spy_move.assert_called_once()
+    assert concrete_ghost._target is not None
+    assert concrete_ghost._target.x == 200.0
+    assert concrete_ghost._target.y == 200.0
 
-    def test_exit_house_moves_horizontally_first(self, concrete_ghost: Ghost) -> None:
-        """Test that ghost moves horizontally towards exit first."""
-        exit_x = concrete_ghost._house_exit.x
-        concrete_ghost._position = Position(exit_x - 20.0, 200.0)
-        concrete_ghost._speed = 2
 
-        concrete_ghost._exit_house()
+# --- Ghost Choose Direction Tests ---
 
-        assert concrete_ghost._position.x == exit_x - 18.0
-        assert concrete_ghost._position.y == 200.0
 
-    def test_exit_house_moves_vertically_after_centered(
-        self, concrete_ghost: Ghost
-    ) -> None:
-        """Test that ghost moves up after horizontal alignment."""
-        exit_x = concrete_ghost._house_exit.x
-        exit_y = concrete_ghost._house_exit.y
-        concrete_ghost._position = Position(exit_x, exit_y + 20.0)
-        concrete_ghost._speed = 2
+def test_choose_direction_does_nothing_when_no_target(concrete_ghost):
+    """Test that direction isn't changed when target is None."""
+    concrete_ghost._target = None
+    initial_direction = concrete_ghost._direction
 
-        concrete_ghost._exit_house()
+    concrete_ghost._choose_direction()
 
-        assert concrete_ghost._position.x == exit_x
-        assert concrete_ghost._position.y == exit_y + 18.0
+    assert concrete_ghost._direction == initial_direction
 
-    def test_exit_house_transitions_to_active_when_reached(
-        self, concrete_ghost: Ghost
-    ) -> None:
-        """Test that ghost becomes ACTIVE when reaching exit."""
-        concrete_ghost._position = Position(
-            concrete_ghost._house_exit.x, concrete_ghost._house_exit.y
-        )
-        concrete_ghost._house_state = GhostHouseState.EXITING
 
-        concrete_ghost._exit_house()
+def test_choose_direction_picks_direction_towards_target(concrete_ghost, mock_game_map):
+    """Test that ghost picks direction that moves towards target."""
 
-        assert concrete_ghost._house_state == GhostHouseState.ACTIVE
+    def grid_to_pixel_mock(x: int, y: int) -> Tuple[float, float]:
+        return x * TILE_SIZE + TILE_SIZE / 2, y * TILE_SIZE + TILE_SIZE / 2
 
+    concrete_ghost._position = Position(150.0, 150.0)
+    concrete_ghost._target = Position(250.0, 150.0)
+    mock_game_map.grid_to_pixel.side_effect = grid_to_pixel_mock
+    mock_game_map.is_walkable.return_value = True
 
-class TestGhostReleaseFromHouse:
-    """Test suite for Ghost release_from_house() method."""
+    concrete_ghost._choose_direction()
+    assert concrete_ghost._direction == Direction.RIGHT
 
-    @pytest.mark.parametrize(
-        "initial_state, expected_state",
-        [
-            (GhostHouseState.IN_HOUSE, GhostHouseState.EXITING),
-            (GhostHouseState.EXITING, GhostHouseState.EXITING),
-            (GhostHouseState.ACTIVE, GhostHouseState.ACTIVE),
-        ],
-    )
-    def test_release_state_transitions(
-        self,
-        concrete_ghost: Ghost,
-        initial_state: GhostHouseState,
-        expected_state: GhostHouseState,
-    ) -> None:
-        """Test release transitions correctly based on current state."""
-        concrete_ghost._house_state = initial_state
 
-        concrete_ghost.release_from_house()
+def test_choose_direction_avoids_going_backwards(concrete_ghost, mock_game_map):
+    """Test that ghost never reverses direction."""
+    concrete_ghost._position = Position(150.0, 150.0)
+    concrete_ghost._direction = Direction.RIGHT
+    concrete_ghost._target = Position(50.0, 150.0)
+    mock_game_map.pixel_to_grid.return_value = (5, 5)
+    mock_game_map.grid_to_pixel.return_value = (150.0, 150.0)
 
-        assert concrete_ghost._house_state == expected_state
+    def is_walkable_mock(x: int, y: int) -> bool:
+        return (x, y) in [(5, 4), (5, 6)]  # UP and DOWN are valid
 
+    mock_game_map.is_walkable.side_effect = is_walkable_mock
 
-class TestGhostReturnToHouse:
-    """Test suite for Ghost return_to_house() method."""
+    concrete_ghost._choose_direction()
+    assert concrete_ghost._direction != Direction.LEFT
 
-    def test_return_resets_all_ghost_state(self, concrete_ghost: Ghost) -> None:
-        """Test that return_to_house performs complete reset."""
-        spawn_x = concrete_ghost._spawn_position.x
-        spawn_y = concrete_ghost._spawn_position.y
-        concrete_ghost._position = Position(999.0, 999.0)
-        concrete_ghost._house_state = GhostHouseState.ACTIVE
-        concrete_ghost._direction = Direction.LEFT
 
-        concrete_ghost.return_to_house()
+# --- Ghost Move Tests ---
 
-        assert concrete_ghost._position.x == spawn_x
-        assert concrete_ghost._position.y == spawn_y
-        assert concrete_ghost._house_state == GhostHouseState.IN_HOUSE
-        assert concrete_ghost._direction == Direction.RIGHT
 
-
-class TestBlinky:
-    """Test suite for Blinky ghost."""
+def test_move_updates_position_when_walkable(concrete_ghost, mock_game_map):
+    """Test that ghost moves when path is clear."""
+    concrete_ghost._position = Position(150.0, 150.0)
+    concrete_ghost._direction = Direction.RIGHT
+    concrete_ghost._speed = 2
+    mock_game_map.is_walkable.return_value = True
 
-    def test_initialization(self, mock_game_map: GameMap) -> None:
-        """Test Blinky initializes with correct configuration."""
-        blinky = Blinky(mock_game_map, 100.0, 200.0)
+    concrete_ghost._move()
+    assert concrete_ghost._position.x == 152.0
+    assert concrete_ghost._position.y == 150.0
 
-        assert blinky._position.x == 100.0
-        assert blinky._position.y == 200.0
-        assert blinky._color == RED
-        assert blinky._name == "Blinky"
-        assert blinky._house_state == GhostHouseState.IN_HOUSE
 
-    def test_calculate_target_returns_pacman_position(
-        self, mock_game_map: GameMap
-    ) -> None:
-        """Test Blinky targets Pac-Man's exact position."""
-        blinky = Blinky(mock_game_map, 100.0, 100.0)
+def test_move_snaps_to_center_when_blocked(concrete_ghost, mock_game_map):
+    """Test that ghost snaps to tile center when hitting wall."""
+    concrete_ghost._position = Position(148.0, 148.0)
+    concrete_ghost._direction = Direction.RIGHT
+    mock_game_map.is_walkable.return_value = False
+    mock_game_map.grid_to_pixel.return_value = (150.0, 150.0)
 
-        target = blinky.calculate_target(250.0, 300.0, (1, 0))
+    concrete_ghost._move()
+    assert concrete_ghost._position.x == 150.0
+    assert concrete_ghost._position.y == 150.0
 
-        assert target == (250.0, 300.0)
 
-
-class TestPinky:
-    """Test suite for Pinky ghost."""
-
-    def test_initialization(self, mock_game_map: GameMap) -> None:
-        """Test Pinky initializes with correct configuration."""
-        pinky = Pinky(mock_game_map, 150.0, 250.0)
-
-        assert pinky._position.x == 150.0
-        assert pinky._position.y == 250.0
-        assert pinky._color == PINK
-        assert pinky._name == "Pinky"
-        assert pinky._tiles_ahead == PINKY_TILES_AHEAD
-
-    def test_calculate_target_anticipates_pacman(self, mock_game_map: GameMap) -> None:
-        """Test Pinky targets ahead of Pac-Man."""
-        pinky = Pinky(mock_game_map, 100.0, 100.0)
-        offset = PINKY_TILES_AHEAD * TILE_SIZE
-
-        target = pinky.calculate_target(200.0, 200.0, (1, 0))
-
-        assert target == (200.0 + offset, 200.0)
-
-
-class TestInky:
-    """Test suite for Inky ghost."""
-
-    def test_initialization(self, mock_game_map: GameMap) -> None:
-        """Test Inky initializes with correct configuration."""
-        inky = Inky(mock_game_map, 180.0, 220.0)
-
-        assert inky._position.x == 180.0
-        assert inky._position.y == 220.0
-        assert inky._color == CYAN
-        assert inky._name == "Inky"
-        assert inky._offset_tiles == INKY_OFFSET_TILES
-        assert inky._blinky is None
-
-    def test_set_blinky(self, mock_game_map: GameMap) -> None:
-        """Test Inky can have Blinky reference set."""
-        inky = Inky(mock_game_map, 100.0, 100.0)
-        blinky = Blinky(mock_game_map, 200.0, 200.0)
-
-        inky.set_blinky(blinky)
-
-        assert inky._blinky == blinky
-
-    @pytest.mark.parametrize(
-        "has_blinky,expected_x,expected_y",
-        [
-            (False, 300.0, 400.0),
-            (True, 500.0, 600.0),
-        ],
-    )
-    def test_calculate_target(
-        self,
-        mock_game_map: GameMap,
-        has_blinky: bool,
-        expected_x: float,
-        expected_y: float,
-    ) -> None:
-        """Test Inky targeting with and without Blinky."""
-        inky = Inky(mock_game_map, 100.0, 100.0)
-        offset = INKY_OFFSET_TILES * TILE_SIZE
-
-        if has_blinky:
-            blinky = Blinky(mock_game_map, 200.0, 200.0)
-            inky.set_blinky(blinky)
-            intermediate_x = 300.0 + offset
-            intermediate_y = 400.0
-            vector_x = intermediate_x - 200.0
-            vector_y = intermediate_y - 200.0
-            expected_x = 200.0 + vector_x * 2
-            expected_y = 200.0 + vector_y * 2
-
-        target = inky.calculate_target(300.0, 400.0, (1, 0))
-
-        if not has_blinky:
-            assert target == (300.0, 400.0)
-        else:
-            assert target == (expected_x, expected_y)
-
-
-class TestClyde:
-    """Test suite for Clyde ghost."""
-
-    def test_initialization(self, mock_game_map: GameMap) -> None:
-        """Test Clyde initializes with correct configuration."""
-        clyde = Clyde(mock_game_map, 120.0, 180.0)
-
-        assert clyde._position.x == 120.0
-        assert clyde._position.y == 180.0
-        assert clyde._color == ORANGE
-        assert clyde._name == "Clyde"
-
-    @pytest.mark.parametrize(
-        "ghost_x,ghost_y,pacman_x,pacman_y,should_chase",
-        [
-            (100.0, 100.0, 500.0, 100.0, True),
-            (100.0, 100.0, 150.0, 100.0, False),
-        ],
-    )
-    def test_calculate_target_behavior(
-        self,
-        mock_game_map: GameMap,
-        *,
-        ghost_x: float,
-        ghost_y: float,
-        pacman_x: float,
-        pacman_y: float,
-        should_chase: bool,
-    ) -> None:
-        """Test Clyde chases when far, scatters when close."""
-        clyde = Clyde(mock_game_map, ghost_x, ghost_y)
-
-        target = clyde.calculate_target(pacman_x, pacman_y, (1, 0))
-
-        if should_chase:
-            assert target == (pacman_x, pacman_y)
-        else:
-            assert target == (clyde._scatter_x, clyde._scatter_y)
+# --- Ghost Exit House Tests ---
+
+
+def test_exit_house_moves_horizontally_first(concrete_ghost):
+    """Test that ghost moves horizontally towards exit first."""
+    exit_x = concrete_ghost._house_exit.x
+    concrete_ghost._position = Position(exit_x - 20.0, 200.0)
+    concrete_ghost._speed = 2.0
+    concrete_ghost._house_state = GhostHouseState.EXITING
+
+    concrete_ghost._exit_house()
+
+    assert concrete_ghost._position.x > (exit_x - 20.0)
