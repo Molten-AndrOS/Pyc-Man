@@ -136,6 +136,10 @@ def test_ghost_collision_death(pacman, mocker: MockerFixture):
     ghost.y = pacman.y
     ghost.in_ghost_house = False
 
+    # Specify ghost state
+    ghost.is_frightened = False
+    ghost.is_eaten = False
+
     # Suppress print output
     mocker.patch("builtins.print")
 
@@ -155,6 +159,10 @@ def test_ghost_collision_eat_ghost(pacman, mocker: MockerFixture):
     ghost.x = pacman.x
     ghost.y = pacman.y
     ghost.in_ghost_house = False
+
+    # Ghost must be frightened
+    ghost.is_frightened = True
+    ghost.is_eaten = False
 
     pacman.update([ghost])
 
