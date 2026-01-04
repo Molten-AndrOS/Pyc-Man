@@ -13,6 +13,7 @@ from src.ghost import Blinky, Clyde, Ghost, Inky, Pinky
 from src.pacman import PacMan
 from src.settings import BLACK, FPS, SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE
 
+
 def handle_ghost_release(timer: int, blinky, pinky, inky, clyde) -> None:
     """Handles the progressive release of ghosts based on the timer."""
     if timer == 1:
@@ -23,6 +24,7 @@ def handle_ghost_release(timer: int, blinky, pinky, inky, clyde) -> None:
         inky.release_from_house()
     elif timer == 900:
         clyde.release_from_house()
+
 
 def main() -> None:
     """main game loop setup"""
@@ -35,9 +37,7 @@ def main() -> None:
 
     # Pacman creation
     start_x = 9 * TILE_SIZE + TILE_SIZE / 2
-    start_y = (
-        16 * TILE_SIZE + TILE_SIZE / 2
-    )  # Fix to stay visible on map
+    start_y = 16 * TILE_SIZE + TILE_SIZE / 2  # Fix to stay visible on map
     pacman = PacMan(game_map, start_x, start_y)
 
     # Ghost creation
@@ -48,7 +48,7 @@ def main() -> None:
 
     ghosts: List[Ghost] = [blinky, pinky, inky, clyde]
 
-    ghost_release_timer = 0 #Counter to relase ghosts
+    ghost_release_timer = 0  # Counter to relase ghosts
 
     """Main loop"""
     running = True
@@ -57,7 +57,6 @@ def main() -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
 
         # Ghost exit timers
         ghost_release_timer += 1
@@ -87,7 +86,7 @@ def main() -> None:
         pacman.draw(screen)  # Pac-Man draw
 
         for ghost in ghosts:
-            ghost.draw(screen)  #Ghosts draw
+            ghost.draw(screen)  # Ghosts draw
 
         pygame.display.flip()
         clock.tick(FPS)
