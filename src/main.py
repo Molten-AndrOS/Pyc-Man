@@ -13,9 +13,19 @@ from src.ghost import Blinky, Clyde, Ghost, Inky, Pinky
 from src.pacman import PacMan
 from src.settings import BLACK, FPS, SCREEN_HEIGHT, SCREEN_WIDTH, TILE_SIZE
 
+def handle_ghost_release(timer: int, blinky, pinky, inky, clyde) -> None:
+    """Handles the progressive release of ghosts based on the timer."""
+    if timer == 1:
+        blinky.release_from_house()
+    elif timer == 300:
+        pinky.release_from_house()
+    elif timer == 600:
+        inky.release_from_house()
+    elif timer == 900:
+        clyde.release_from_house()
 
 def main() -> None:
-    """Run the main game loop."""
+    """main game loop setup"""
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Pyc-Man")
@@ -23,16 +33,14 @@ def main() -> None:
 
     game_map = GameMap()
 
-    # --- Creazione Entità ---
-
-    # 1. Crea Pac-Man (posizionato a riga 23, colonna 14 circa)
+    # Pacman creation
     start_x = 9 * TILE_SIZE + TILE_SIZE / 2
     start_y = (
         16 * TILE_SIZE + TILE_SIZE / 2
-    )  # Aggiustato per stare nella mappa visibile
+    )  # Fix to stay visible on map
     pacman = PacMan(game_map, start_x, start_y)
 
-    # 2. Crea i Fantasmi
+    # Ghost creation
     blinky = Blinky(game_map, 9.5 * TILE_SIZE, 8.5 * TILE_SIZE)
     pinky = Pinky(game_map, 8.5 * TILE_SIZE, 10.5 * TILE_SIZE)
     inky = Inky(game_map, 9.5 * TILE_SIZE, 10.5 * TILE_SIZE, blinky)
@@ -40,36 +48,46 @@ def main() -> None:
 
     ghosts: List[Ghost] = [blinky, pinky, inky, clyde]
 
+    ghost_release_timer = 0 #Counter to relase ghosts
+
+    """Main loop"""
     running = True
     while running:
-        # A. Gestione Eventi
+        # Events handler
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        # B. Aggiornamento Logica (Update)
+
+        # Ghost exit timers
+        ghost_release_timer += 1
+
+        # Release ghosts from house each with his own timer
+        handle_ghost_release(ghost_release_timer, blinky, pinky, inky, clyde)
+
+        # Pacman logic update
         pacman.handle_input()
         pacman.update(ghosts)
 
-        # Calcola direzione corrente per i fantasmi
+        # Calculate pacman directiopn for ghosts
         current_dir = pacman.direction.value if pacman.direction else (0, 0)
 
         for ghost in ghosts:
             ghost.update(pacman.x, pacman.y, current_dir)
 
-        # Controllo Game Over
+        # Game Over check
         if pacman.lives <= 0:
             print("Game Over")
             running = False
 
-        # C. Disegno (Draw)
+        # Draw
         screen.fill(BLACK)
 
-        game_map.draw(screen)  # Disegna la mappa
-        pacman.draw(screen)  # Disegna Pac-Man
+        game_map.draw(screen)  # map draw
+        pacman.draw(screen)  # Pac-Man draw
 
         for ghost in ghosts:
-            ghost.draw(screen)  # Disegna i fantasmi
+            ghost.draw(screen)  #Ghosts draw
 
         pygame.display.flip()
         clock.tick(FPS)
