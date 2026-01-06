@@ -75,7 +75,7 @@ def set_ghost_modes(ghosts: List[Ghost], mode: str, previous_mode: str) -> None:
             ghost.set_state(GhostState.CHASE, reverse_direction=mode_changed)
 
 
-def main() -> None:
+def main() -> None:  # pylint: disable=too-many-locals
     """main game loop setup"""
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))

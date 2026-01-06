@@ -12,7 +12,7 @@ from pytest_mock import MockerFixture
 
 from src.direction import Direction
 from src.game_map import GameMap
-from src.ghost import Ghost, GhostConfig, GhostHouseState
+from src.ghost import Ghost, GhostConfig, GhostHouseState, GhostState
 from src.position import Position
 from src.settings import (
     GHOST_HOUSE_EXIT_X,
@@ -278,8 +278,6 @@ def test_update_calls_exit_house_when_exiting(concrete_ghost, mocker: MockerFixt
 
 def test_update_normal_behavior_when_active(concrete_ghost, mocker: MockerFixture):
     """Test that ghost performs AI when ACTIVE."""
-    from src.ghost import GhostState
-
     concrete_ghost._house_state = GhostHouseState.ACTIVE
     concrete_ghost._state = GhostState.CHASE  # Set to CHASE so calculate_target is used
     spy_choose = mocker.spy(concrete_ghost, "_choose_direction")
