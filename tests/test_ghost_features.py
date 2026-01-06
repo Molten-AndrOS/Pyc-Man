@@ -42,6 +42,9 @@ def concrete_ghost(mock_game_map, ghost_config):
         ) -> tuple[float, float]:
             return pacman_x, pacman_y
 
+        def get_scatter_target(self) -> tuple[float, float]:
+            return 0.0, 0.0
+
     return TestGhost(mock_game_map, ghost_config)
 
 

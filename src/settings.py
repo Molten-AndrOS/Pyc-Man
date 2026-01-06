@@ -6,19 +6,55 @@ SCREEN_WIDTH = 19 * TILE_SIZE  # columns from game_map layout
 SCREEN_HEIGHT = 22 * TILE_SIZE  # rows from game_map layout
 FPS = 60
 
+# Movement speeds
+PACMAN_SPEED = 2.0
+PACMAN_POWERED_SPEED = 2.2  # Pac-Man goes faster when powered-up (110%)
+PACMAN_EATING_SPEED_MULTIPLIER = 0.71  # Pac-Man slows to 71% when eating
+GHOST_SPEED = 1.9  # Ghosts slightly slower than Pac-Man
+GHOST_FRIGHTENED_SPEED = 1.0  # 50% of normal Pac-Man speed
+GHOST_EATEN_SPEED = 4.0  # Fast return to house
+
 # Ghost AI settings
-GHOST_SPEED = 2
 PINKY_TILES_AHEAD = 4
 INKY_OFFSET_TILES = 2
 CLYDE_SCATTER_DISTANCE_TILES = 8
 
+# Scatter mode target corners (in tiles)
+# Each ghost retreats to a different corner in SCATTER mode
+BLINKY_SCATTER_CORNER = (25, -3)  # Top-right
+PINKY_SCATTER_CORNER = (-3, -3)  # Top-left
+INKY_SCATTER_CORNER = (25, 32)  # Bottom-right
+CLYDE_SCATTER_CORNER = (-3, 32)  # Bottom-left
+
+# Ghost house coordinates (in tiles)
+# Ghosts cannot re-enter the house once they leave (except when EATEN)
+# The exit point (9.5, 8.5) must be OUTSIDE these bounds
+# Only the inner rectangle with walls (7-11, 9-11) to allow ghost movement in adjacent corridors
+GHOST_HOUSE_MIN_X = 7
+GHOST_HOUSE_MAX_X = 11
+GHOST_HOUSE_MIN_Y = 9  # Start from row 9, so row 8 (exit) is outside
+GHOST_HOUSE_MAX_Y = 11
+
 # Ghost house exit coordinates (in tiles)
-GHOST_HOUSE_EXIT_X = 13.5
-GHOST_HOUSE_EXIT_Y = 11.5
+# Exit is at the center top of the ghost house
+GHOST_HOUSE_EXIT_X = 9.5  # Center of the map (column 9)
+GHOST_HOUSE_EXIT_Y = 8.5  # Above the ghost house (row 8)
 
 # Tunnel settings
 TUNNEL_ROW = 10  # The row where the horizontal tunnel is located
 TUNNEL_SPEED_MULTIPLIER = 0.4  # Ghosts slow to 40% in tunnel
+
+# Ghost mode cycles (in frames at 60 FPS)
+GHOST_MODE_CYCLES = [
+    ("SCATTER", 420),  # 7 seconds
+    ("CHASE", 1200),  # 20 seconds
+    ("SCATTER", 420),  # 7 seconds
+    ("CHASE", 1200),  # 20 seconds
+    ("SCATTER", 300),  # 5 seconds
+    ("CHASE", 1200),  # 20 seconds
+    ("SCATTER", 300),  # 5 seconds
+    ("CHASE", -1),  # Permanent CHASE (-1 means infinite)
+]
 
 
 # Colors

@@ -12,7 +12,7 @@ from pytest_mock import MockerFixture
 
 from src.direction import Direction
 from src.game_map import GameMap
-from src.ghost import Ghost, GhostConfig, GhostHouseState
+from src.ghost import Ghost, GhostConfig, GhostHouseState, GhostState
 from src.position import Position
 from src.settings import (
     GHOST_HOUSE_EXIT_X,
@@ -61,6 +61,10 @@ def concrete_ghost(mock_game_map: GameMap, ghost_config: GhostConfig) -> Ghost:
         ) -> Tuple[float, float]:
             """Simple target calculation for testing."""
             return pacman_x, pacman_y
+
+        def get_scatter_target(self) -> Tuple[float, float]:
+            """Simple scatter target for testing."""
+            return 0.0, 0.0
 
     return ConcreteGhost(mock_game_map, ghost_config)
 
@@ -118,6 +122,9 @@ def test_ghost_initializes_with_config(mock_game_map, ghost_config):
         def calculate_target(self, pacman_x, pacman_y, pacman_direction):
             return 0, 0
 
+        def get_scatter_target(self):
+            return 0.0, 0.0
+
     ghost = TestGhost(mock_game_map, ghost_config)
 
     assert ghost._game_map == mock_game_map
@@ -162,6 +169,9 @@ def test_ghost_house_state_initialization(
 
         def calculate_target(self, pacman_x, pacman_y, pacman_direction):
             return 0, 0
+
+        def get_scatter_target(self):
+            return 0.0, 0.0
 
     ghost = TestGhost(mock_game_map, config)
     assert ghost._house_state == expected_state
@@ -269,6 +279,7 @@ def test_update_calls_exit_house_when_exiting(concrete_ghost, mocker: MockerFixt
 def test_update_normal_behavior_when_active(concrete_ghost, mocker: MockerFixture):
     """Test that ghost performs AI when ACTIVE."""
     concrete_ghost._house_state = GhostHouseState.ACTIVE
+    concrete_ghost._state = GhostState.CHASE  # Set to CHASE so calculate_target is used
     spy_choose = mocker.spy(concrete_ghost, "_choose_direction")
     spy_move = mocker.spy(concrete_ghost, "_move")
 
@@ -342,13 +353,19 @@ def test_move_updates_position_when_walkable(concrete_ghost, mock_game_map):
 
 
 def test_move_snaps_to_center_when_blocked(concrete_ghost, mock_game_map):
-    """Test that ghost snaps to tile center when hitting wall."""
-    concrete_ghost._position = Position(148.0, 148.0)
+    """Test that ghost snaps to tile center only when trying to move PAST center toward wall.
+
+    This matches Pac-Man's behavior to prevent bouncing.
+    """
+    # Setup: Ghost is past center, trying to move further right into wall
+    concrete_ghost._position = Position(151.0, 150.0)  # Past center
     concrete_ghost._direction = Direction.RIGHT
-    mock_game_map.is_walkable.return_value = False
-    mock_game_map.grid_to_pixel.return_value = (150.0, 150.0)
+    concrete_ghost._speed = 2.0
+    mock_game_map.is_walkable.return_value = False  # Wall ahead
+    mock_game_map.grid_to_pixel.return_value = (150.0, 150.0)  # Center of current tile
 
     concrete_ghost._move()
+
     assert concrete_ghost._position.x == 150.0
     assert concrete_ghost._position.y == 150.0
 

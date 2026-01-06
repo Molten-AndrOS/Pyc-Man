@@ -8,32 +8,41 @@ from src.main import handle_ghost_release, main
 
 
 def test_ghost_release_logic(mocker: MockerFixture):
-    """Tests that ghosts are released at the correct time using pytest-mock."""
-    # Create Mocks for all ghosts
-    blinky = mocker.Mock()
+    """Tests that ghosts are released at the correct time using pytest-mock.
+
+    New behavior:
+    - Blinky: starts free (not in this function anymore)
+    - Pinky: exits after 60 frames (1 second)
+    - Inky: exits after 30 pellets eaten
+    - Clyde: exits after 60 pellets eaten
+    """
+    # Create Mocks for ghosts (no blinky anymore)
     pinky = mocker.Mock()
     inky = mocker.Mock()
     clyde = mocker.Mock()
 
-    # Test Frame 1 (Blinky exits immediately)
-    handle_ghost_release(1, blinky, pinky, inky, clyde)
-    blinky.release_from_house.assert_called_once()
+    # Test Frame 59, 0 pellets (No exits yet)
+    handle_ghost_release(0, 59, pinky, inky, clyde)
     pinky.release_from_house.assert_not_called()
 
-    # Test Frame 299 (No new exits)
-    handle_ghost_release(299, blinky, pinky, inky, clyde)
-    pinky.release_from_house.assert_not_called()
-
-    # Test Frame 300 (Pinky exits)
-    handle_ghost_release(300, blinky, pinky, inky, clyde)
+    # Test Frame 60, 0 pellets (Pinky exits)
+    handle_ghost_release(0, 60, pinky, inky, clyde)
     pinky.release_from_house.assert_called_once()
 
-    # Test Frame 600 (Inky exits)
-    handle_ghost_release(600, blinky, pinky, inky, clyde)
+    # Test Frame 100, 29 pellets (No Inky yet)
+    handle_ghost_release(29, 100, pinky, inky, clyde)
+    inky.release_from_house.assert_not_called()
+
+    # Test Frame 100, 30 pellets (Inky exits)
+    handle_ghost_release(30, 100, pinky, inky, clyde)
     inky.release_from_house.assert_called_once()
 
-    # Test Frame 900 (Clyde exits)
-    handle_ghost_release(900, blinky, pinky, inky, clyde)
+    # Test Frame 100, 59 pellets (No Clyde yet)
+    handle_ghost_release(59, 100, pinky, inky, clyde)
+    clyde.release_from_house.assert_not_called()
+
+    # Test Frame 100, 60 pellets (Clyde exits)
+    handle_ghost_release(60, 100, pinky, inky, clyde)
     clyde.release_from_house.assert_called_once()
 
 
