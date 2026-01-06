@@ -61,7 +61,7 @@ class Ghost(ABC):
         self._color: Tuple[int, int, int] = config.color
         self._name: str = config.name
         self._direction: Direction = Direction.RIGHT
-        self._speed: int = settings.GHOST_SPEED
+        self._speed: float = settings.GHOST_SPEED
         self._target: Optional[Position] = None
 
         # States
@@ -120,20 +120,40 @@ class Ghost(ABC):
     def calculate_target(
         self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
     ) -> Tuple[float, float]:
-        """Calculate the target position based on Pac-Man's state."""
+        """Calculate the target position based on Pac-Man's state (CHASE mode)."""
+
+    @abstractmethod
+    def get_scatter_target(self) -> Tuple[float, float]:
+        """Get the scatter mode target corner for this ghost."""
+
+    def set_state(self, new_state: GhostState, reverse_direction: bool = False) -> None:
+        """Set the ghost state.
+
+        Args:
+            new_state: The new state to set
+            reverse_direction: Whether to reverse direction (used for mode changes)
+        """
+        # Don't override FRIGHTENED or EATEN states
+        if self._state in [GhostState.FRIGHTENED, GhostState.EATEN]:
+            return
+
+        self._state = new_state
+
+        if reverse_direction:
+            self._reverse_direction()
 
     def start_frightened(self) -> None:
         """Activate frightened state."""
         if self._state not in [GhostState.EATEN, GhostState.FRIGHTENED]:
             self._state = GhostState.FRIGHTENED
             self._frightened_timer = 600  # Frames (e.g., 10 seconds at 60 FPS)
-            self._speed = 1  # Slower speed
+            self._speed = settings.GHOST_FRIGHTENED_SPEED  # Slower speed
             self._reverse_direction()
 
     def get_eaten(self) -> None:
         """Handle being eaten by Pac-Man."""
         self._state = GhostState.EATEN
-        self._speed = 4  # Fast return speed
+        self._speed = settings.GHOST_EATEN_SPEED  # Fast return speed
 
     def _reverse_direction(self) -> None:
         """Reverses the current direction immediately."""
@@ -179,7 +199,9 @@ class Ghost(ABC):
             target_x, target_y = self._house_exit.x, self._house_exit.y
         elif self._state == GhostState.FRIGHTENED:
             target_x, target_y = 0, 0
-        else:
+        elif self._state == GhostState.SCATTER:
+            target_x, target_y = self.get_scatter_target()
+        else:  # CHASE mode
             target_x, target_y = self.calculate_target(
                 pacman_x, pacman_y, pacman_direction
             )
@@ -209,9 +231,20 @@ class Ghost(ABC):
         )
 
     def _is_in_tunnel(self) -> bool:
-        """Check if ghost is in the horizontal tunnel."""
-        _, grid_y = self._position.to_grid()
-        return grid_y == settings.TUNNEL_ROW
+        """Check if ghost is in the horizontal tunnel"""
+        grid_x, grid_y = self._position.to_grid()
+
+        if grid_y != settings.TUNNEL_ROW:
+            return False
+        # Left tunnel: columns 0-1, Right tunnel: columns 17-18
+        return grid_x <= 1 or grid_x >= 17
+
+    def _is_in_ghost_house(self, grid_x: int, grid_y: int) -> bool:
+        """Check if a grid position is inside the ghost house."""
+        return (
+            settings.GHOST_HOUSE_MIN_X <= grid_x <= settings.GHOST_HOUSE_MAX_X
+            and settings.GHOST_HOUSE_MIN_Y <= grid_y <= settings.GHOST_HOUSE_MAX_Y
+        )
 
     def _is_opposite_direction(self, direction: Direction) -> bool:
         """Check if given direction is opposite to current direction."""
@@ -230,8 +263,21 @@ class Ghost(ABC):
         next_grid_x = grid_x + dx
         next_grid_y = grid_y + dy
 
+        # Wrap next_grid_x for tunnel
+        if next_grid_x < 0:
+            next_grid_x = self._game_map.width - 1
+        elif next_grid_x >= self._game_map.width:
+            next_grid_x = 0
+
         if not self._game_map.is_walkable(next_grid_x, next_grid_y):
             return None
+
+        if self._is_in_ghost_house(next_grid_x, next_grid_y):
+            if (
+                self._state != GhostState.EATEN
+                and self._house_state != GhostHouseState.EXITING
+            ):
+                return None
 
         next_pixel_x, next_pixel_y = self._game_map.grid_to_pixel(
             next_grid_x, next_grid_y
@@ -286,11 +332,50 @@ class Ghost(ABC):
 
             grid_x, grid_y = self._position.to_grid()
             dx, dy = direction.value
-            if self._game_map.is_walkable(grid_x + dx, grid_y + dy):
-                valid_directions.append(direction)
+            next_grid_x = grid_x + dx
+            next_grid_y = grid_y + dy
+
+            # Wrap next_grid_x for tunnel
+            if next_grid_x < 0:
+                next_grid_x = self._game_map.width - 1
+            elif next_grid_x >= self._game_map.width:
+                next_grid_x = 0
+
+            if not self._game_map.is_walkable(next_grid_x, next_grid_y):
+                continue
+
+            if self._is_in_ghost_house(next_grid_x, next_grid_y):
+                continue
+
+            valid_directions.append(direction)
 
         if valid_directions:
             self._direction = random.choice(valid_directions)
+
+    def _is_next_tile_walkable(self, next_grid_x: int, next_grid_y: int) -> bool:
+        """Check if the next tile is walkable for this ghost."""
+        if not self._game_map.is_walkable(next_grid_x, next_grid_y):
+            return False
+
+        # Check if next tile is blocked by ghost house
+        if self._is_in_ghost_house(next_grid_x, next_grid_y):
+            return self._state == GhostState.EATEN
+
+        return True
+
+    def _should_block_movement(
+        self, new_x: float, new_y: float, center_x: float, center_y: float
+    ) -> bool:
+        """Check if movement should be blocked when approaching an obstacle."""
+        if self._direction == Direction.RIGHT and new_x > center_x:
+            return True
+        if self._direction == Direction.LEFT and new_x < center_x:
+            return True
+        if self._direction == Direction.DOWN and new_y > center_y:
+            return True
+        if self._direction == Direction.UP and new_y < center_y:
+            return True
+        return False
 
     def _move(self) -> None:
         """Move the ghost in the current direction."""
@@ -310,18 +395,32 @@ class Ghost(ABC):
         elif new_x >= map_width_pixels:
             new_x -= map_width_pixels
 
-        new_position = Position(new_x, new_y)
-        new_grid_x, new_grid_y = new_position.to_grid()
+        # Get current grid position and center
+        grid_x, grid_y = self._position.to_grid()
+        center_x, center_y = self._game_map.grid_to_pixel(grid_x, grid_y)
 
-        if self._game_map.is_walkable(new_grid_x, new_grid_y):
-            self._position.x = new_x
-            self._position.y = new_y
-        else:
-            # Snap to center
-            grid_x, grid_y = self._position.to_grid()
-            center_x, center_y = self._game_map.grid_to_pixel(grid_x, grid_y)
+        # Check the next tile in the direction of movement
+        next_grid_x = grid_x + dx
+        next_grid_y = grid_y + dy
+
+        # Wrap next_grid_x for tunnel
+        if next_grid_x < 0:
+            next_grid_x = self._game_map.width - 1
+        elif next_grid_x >= self._game_map.width:
+            next_grid_x = 0
+
+        # Check if movement is valid
+        next_tile_walkable = self._is_next_tile_walkable(next_grid_x, next_grid_y)
+
+        # Only block movement if trying to move PAST center toward obstacle
+        if not next_tile_walkable and self._should_block_movement(
+            new_x, new_y, center_x, center_y
+        ):
             self._position.x = center_x
             self._position.y = center_y
+        else:
+            self._position.x = new_x
+            self._position.y = new_y
 
     def _exit_house(self) -> None:
         """Move ghost towards the house exit point."""
@@ -446,15 +545,26 @@ class Blinky(Ghost):
             start_position=Position(start_x, start_y),
             color=settings.RED,
             name="Blinky",
-            starts_in_house=True,
+            starts_in_house=False,
         )
         super().__init__(game_map, config)
+        self._direction = Direction.LEFT
 
     def calculate_target(
         self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
     ) -> Tuple[float, float]:
-        """Blinky targets Pac-Man's exact position."""
         return pacman_x, pacman_y
+
+    def get_scatter_target(self) -> Tuple[float, float]:
+        """Blinky scatters to top-right corner."""
+        corner_x = min(settings.BLINKY_SCATTER_CORNER[0], self._game_map.width - 1)
+        corner_y = max(settings.BLINKY_SCATTER_CORNER[1], 0)
+        corner_x = max(corner_x, 0)
+        corner_y = min(corner_y, self._game_map.height - 1)
+
+        corner_x_px = corner_x * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        corner_y_px = corner_y * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        return corner_x_px, corner_y_px
 
 
 class Pinky(Ghost):
@@ -474,11 +584,22 @@ class Pinky(Ghost):
     def calculate_target(
         self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
     ) -> Tuple[float, float]:
-        """Pinky anticipates Pac-Man's position."""
+        """Pinky anticipates Pac-Man's position (CHASE mode)."""
         offset_pixels: float = self._tiles_ahead * settings.TILE_SIZE
         target_x: float = pacman_x + pacman_direction[0] * offset_pixels
         target_y: float = pacman_y + pacman_direction[1] * offset_pixels
         return target_x, target_y
+
+    def get_scatter_target(self) -> Tuple[float, float]:
+        """Pinky scatters to top-left corner."""
+        corner_x = min(settings.PINKY_SCATTER_CORNER[0], self._game_map.width - 1)
+        corner_y = max(settings.PINKY_SCATTER_CORNER[1], 0)
+        corner_x = max(corner_x, 0)
+        corner_y = min(corner_y, self._game_map.height - 1)
+
+        corner_x_px = corner_x * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        corner_y_px = corner_y * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        return corner_x_px, corner_y_px
 
 
 class Inky(Ghost):
@@ -509,7 +630,7 @@ class Inky(Ghost):
     def calculate_target(
         self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
     ) -> Tuple[float, float]:
-        """Inky uses a vector from Blinky to a point ahead of Pac-Man."""
+        """Inky uses a vector from Blinky to a point ahead of Pac-Man (CHASE mode)."""
         if self._blinky is None:
             return pacman_x, pacman_y
 
@@ -524,6 +645,17 @@ class Inky(Ghost):
         target_y: float = self._blinky.y + vector_y * 2
 
         return target_x, target_y
+
+    def get_scatter_target(self) -> Tuple[float, float]:
+        """Inky scatters to bottom-right corner."""
+        corner_x = min(settings.INKY_SCATTER_CORNER[0], self._game_map.width - 1)
+        corner_y = max(settings.INKY_SCATTER_CORNER[1], 0)
+        corner_x = max(corner_x, 0)
+        corner_y = min(corner_y, self._game_map.height - 1)
+
+        corner_x_px = corner_x * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        corner_y_px = corner_y * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        return corner_x_px, corner_y_px
 
 
 class Clyde(Ghost):
@@ -541,16 +673,26 @@ class Clyde(Ghost):
         self._scatter_distance: float = (
             settings.CLYDE_SCATTER_DISTANCE_TILES * settings.TILE_SIZE
         )
-        self._scatter_x: float = 1.0 * settings.TILE_SIZE
-        self._scatter_y: float = (game_map.height - 2) * settings.TILE_SIZE
 
     def calculate_target(
         self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]
     ) -> Tuple[float, float]:
-        """Clyde targets Pac-Man when far, scatter corner when close."""
+        """Clyde targets Pac-Man when far, scatter corner when close (CHASE mode)."""
         pacman_position = Position(pacman_x, pacman_y)
         distance: float = self._position.distance_to(pacman_position)
 
         if distance > self._scatter_distance:
             return pacman_x, pacman_y
-        return self._scatter_x, self._scatter_y
+        # When close, use scatter corner
+        return self.get_scatter_target()
+
+    def get_scatter_target(self) -> Tuple[float, float]:
+        """Clyde scatters to bottom-left corner."""
+        corner_x = min(settings.CLYDE_SCATTER_CORNER[0], self._game_map.width - 1)
+        corner_y = max(settings.CLYDE_SCATTER_CORNER[1], 0)
+        corner_x = max(corner_x, 0)
+        corner_y = min(corner_y, self._game_map.height - 1)
+
+        corner_x_px = corner_x * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        corner_y_px = corner_y * settings.TILE_SIZE + settings.TILE_SIZE // 2
+        return corner_x_px, corner_y_px

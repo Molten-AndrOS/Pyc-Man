@@ -12,7 +12,14 @@ from src.direction import Direction
 from src.game_map import GameMap
 from src.ghost import Ghost
 from src.position import Position
-from src.settings import FPS, TILE_SIZE, YELLOW
+from src.settings import (
+    FPS,
+    PACMAN_EATING_SPEED_MULTIPLIER,
+    PACMAN_POWERED_SPEED,
+    PACMAN_SPEED,
+    TILE_SIZE,
+    YELLOW,
+)
 
 
 class PacMan:
@@ -28,11 +35,12 @@ class PacMan:
         self.direction = Direction.NONE
         self.next_direction = Direction.NONE  # Input buffering
 
-        self.speed = 2  # Pixels per frame
-        self.speed_multiplier = 1.0  # Speed modifier (1.0 = normal)
+        self.base_speed = PACMAN_SPEED
+        self.speed = PACMAN_SPEED  # Current effective speed
         self.eating_timer = 0  # Frames of slowdown when eating
         self.score = 0
         self.lives = 3
+        self.pellets_eaten = 0  # Counter for ghost release logic
 
         # Animation state
         self.mouth_open_angle = 0
@@ -111,13 +119,27 @@ class PacMan:
                 self.direction = self.next_direction
                 self.next_direction = Direction.NONE
 
+    def _should_block_movement(
+        self, new_x: float, new_y: float, center_x: float, center_y: float
+    ) -> bool:
+        """Check if movement should be blocked when approaching a wall."""
+        if self.direction == Direction.RIGHT and new_x > center_x:
+            return True
+        if self.direction == Direction.LEFT and new_x < center_x:
+            return True
+        if self.direction == Direction.DOWN and new_y > center_y:
+            return True
+        if self.direction == Direction.UP and new_y < center_y:
+            return True
+        return False
+
     def _move(self) -> None:
         """Performs physical movement and handles wall collisions."""
         if self.direction == Direction.NONE:
             return
 
         dx, dy = self.direction.value
-        effective_speed = self.speed * self.speed_multiplier
+        effective_speed = self.speed
         new_x = self.position.x + dx * effective_speed
         new_y = self.position.y + dy * effective_speed
 
@@ -143,27 +165,12 @@ class PacMan:
             next_grid_x = 0
 
         # Check if moving past center toward a wall
-        can_move = True
-        if not self.game_map.is_walkable(next_grid_x, next_grid_y):
-            # Block if trying to move past center toward wall
-            if self.direction == Direction.RIGHT and new_x > center_x:
-                self.position.x = center_x
-                self.position.y = center_y
-                can_move = False
-            elif self.direction == Direction.LEFT and new_x < center_x:
-                self.position.x = center_x
-                self.position.y = center_y
-                can_move = False
-            elif self.direction == Direction.DOWN and new_y > center_y:
-                self.position.x = center_x
-                self.position.y = center_y
-                can_move = False
-            elif self.direction == Direction.UP and new_y < center_y:
-                self.position.x = center_x
-                self.position.y = center_y
-                can_move = False
-
-        if can_move:
+        if not self.game_map.is_walkable(
+            next_grid_x, next_grid_y
+        ) and self._should_block_movement(new_x, new_y, center_x, center_y):
+            self.position.x = center_x
+            self.position.y = center_y
+        else:
             self.position.x = new_x
             self.position.y = new_y
 
@@ -178,23 +185,26 @@ class PacMan:
             if cell_value == 2:  # Normal Pellet
                 self.game_map.set_cell(grid_x, grid_y, 0)
                 self.score += 10
-                # Trigger eating slowdown (87% of normal speed)
+                self.pellets_eaten += 1
+                # Trigger eating slowdown (71% of normal speed)
                 self.eating_timer = 1
-                self.speed_multiplier = 0.87
+                self._update_speed()
             elif cell_value == 3:  # Power Pellet
                 self.game_map.set_cell(grid_x, grid_y, 0)
                 self.score += 50
+                self.pellets_eaten += 1  # Increment pellet counter
                 self._activate_power_up()
                 for ghost in ghosts:
                     ghost.start_frightened()
-                # idem
+                # Trigger eating slowdown
                 self.eating_timer = 1
-                self.speed_multiplier = 0.87
+                self._update_speed()
 
     def _activate_power_up(self) -> None:
         """Activates power-up mode."""
         self.powered_up = True
         self.power_up_timer = self.power_up_duration
+        self._update_speed()
 
     def _update_power_up(self) -> None:
         """Updates the power-up timer."""
@@ -202,22 +212,40 @@ class PacMan:
             self.power_up_timer -= 1
             if self.power_up_timer <= 0:
                 self.powered_up = False
+                self._update_speed()
 
     def _update_eating_timer(self) -> None:
         """Updates the eating slowdown timer."""
         if self.eating_timer > 0:
             self.eating_timer -= 1
             if self.eating_timer == 0:
-                self.speed_multiplier = 1.0  # Restore normal speed
+                self._update_speed()
+
+    def _update_speed(self) -> None:
+        """Updates Pac-Man's speed based on current state."""
+        if self.eating_timer > 0:
+            # Eating: slow down to 71%
+            self.speed = self.base_speed * PACMAN_EATING_SPEED_MULTIPLIER
+        elif self.powered_up:
+            # Powered-up: go faster (110%)
+            self.speed = PACMAN_POWERED_SPEED
+        else:
+            # Normal speed
+            self.speed = self.base_speed
 
     def _check_ghost_collisions(self, ghosts: List[Ghost]) -> None:
-        """Handles collisions with ghosts."""
-        hitbox_radius = TILE_SIZE / 2 * 0.8
+        """Handles collisions with ghosts.
+
+        In the original Pac-Man, collision happens when entities are very close
+        (approximately within 1-2 pixels of each other's centers).
+        """
+        # Collision threshold: ~8 pixels (more precise than before)
+        collision_threshold = TILE_SIZE * 0.27  # Approximately 8 pixels for 30px tiles
 
         for ghost in ghosts:
             dist = math.sqrt((self.x - ghost.x) ** 2 + (self.y - ghost.y) ** 2)
 
-            if dist < hitbox_radius * 2:
+            if dist < collision_threshold:
                 if ghost.is_frightened:
                     self.score += 200
                     ghost.get_eaten()
