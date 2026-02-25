@@ -1,21 +1,11 @@
 """File to manage ghost initialization for game start / loop"""
-import game_map
-from src.game_map import GameMap
-
-import sys
 from typing import List
-
-import pygame
 
 from src.game_map import GameMap
 from src.ghost import Blinky, Clyde, Ghost, GhostState, Inky, Pinky
 from src.settings import (
-    BLACK,
-    FPS,
     GHOST_MODE_CYCLES,
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH,
-    TILE_SIZE,
+    TILE_SIZE
 )
 
 def handle_ghost_release(pellets_eaten: int, timer: int, pinky, inky, clyde) -> None:
