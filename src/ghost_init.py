@@ -1,12 +1,11 @@
 """File to manage ghost initialization for game start / loop"""
+
 from typing import List
 
 from src.game_map import GameMap
 from src.ghost import Blinky, Clyde, Ghost, GhostState, Inky, Pinky
-from src.settings import (
-    GHOST_MODE_CYCLES,
-    TILE_SIZE
-)
+from src.settings import GHOST_MODE_CYCLES, TILE_SIZE
+
 
 def handle_ghost_release(pellets_eaten: int, timer: int, pinky, inky, clyde) -> None:
     """Handles the progressive release of ghosts based on pellets eaten and timer.
@@ -61,7 +60,10 @@ def set_ghost_modes(ghosts: List[Ghost], mode: str, previous_mode: str) -> None:
         elif mode == "CHASE":
             ghost.set_state(GhostState.CHASE, reverse_direction=mode_changed)
 
+
 def ghost_creation(game_map: GameMap) -> List[Ghost]:
+    """Initializes and returns a list containing all four ghost entities."""
+
     blinky = Blinky(game_map, 9.5 * TILE_SIZE, 8.5 * TILE_SIZE)
     pinky = Pinky(game_map, 8.5 * TILE_SIZE, 10.5 * TILE_SIZE)
     inky = Inky(game_map, 9.5 * TILE_SIZE, 10.5 * TILE_SIZE, blinky)
@@ -69,4 +71,3 @@ def ghost_creation(game_map: GameMap) -> List[Ghost]:
 
     ghosts: List[Ghost] = [blinky, pinky, inky, clyde]
     return ghosts
-

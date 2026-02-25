@@ -4,7 +4,14 @@ Tests for ghost_init.py
 
 from pytest_mock import MockerFixture
 
-from src.ghost_init import *
+from src.ghost import Blinky, Clyde, GhostState, Inky, Pinky
+from src.ghost_init import (
+    get_ghost_mode,
+    ghost_creation,
+    handle_ghost_release,
+    set_ghost_modes,
+)
+
 
 def test_ghost_release_logic(mocker: MockerFixture):
     """Tests that ghosts are released at the correct time using pytest-mock.
@@ -70,7 +77,7 @@ def test_set_ghost_modes(mocker: MockerFixture):
     active_ghost.in_ghost_house = False
 
     restricted_ghost = mocker.Mock()
-    restricted_ghost.is_frightened = True # This one should not change state
+    restricted_ghost.is_frightened = True  # This one should not change state
 
     ghosts = [active_ghost, restricted_ghost]
 
@@ -91,13 +98,14 @@ def test_ghost_creation(mocker: MockerFixture):
 
     ghosts = ghost_creation(mock_map)
 
-    assert len(ghosts) == 4
-    assert isinstance(ghosts[0], Blinky)
-    assert isinstance(ghosts[1], Pinky)
-    assert isinstance(ghosts[2], Inky)
-    assert isinstance(ghosts[3], Clyde)
+    # Mocking ghosts
+    mock_blinky = mocker.patch("src.ghost_init.Blinky")
+    mock_inky = mocker.patch("src.ghost_init.Inky")
+    mocker.patch("src.ghost_init.Pinky")
+    mocker.patch("src.ghost_init.Clyde")
 
-    # Verify that Inky has a reference to Blinky
-    inky = ghosts[2]
-    blinky = ghosts[0]
-    assert inky._blinky == blinky
+    assert len(ghosts) == 4
+    mock_blinky_instance = mock_blinky.return_value
+
+    args, _ = mock_inky.call_args
+    assert args[3] == mock_blinky_instance

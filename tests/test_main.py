@@ -4,6 +4,7 @@ Basic tests for main module
 
 from src.main import main
 
+
 class TestMain:
     """Minimal tests for main function"""
 

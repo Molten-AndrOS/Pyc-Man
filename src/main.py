@@ -8,18 +8,23 @@ from typing import List
 
 import pygame
 
-from src.ghost_init import *
 from src.game_map import GameMap
-from src.ghost import Blinky, Clyde, Ghost, GhostState, Inky, Pinky
+from src.ghost import Ghost
+from src.ghost_init import (
+    get_ghost_mode,
+    ghost_creation,
+    handle_ghost_release,
+    set_ghost_modes,
+)
 from src.pacman import PacMan
 from src.settings import (
     BLACK,
     FPS,
-    GHOST_MODE_CYCLES,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     TILE_SIZE,
 )
+
 
 def main() -> None:  # pylint: disable=too-many-locals
     """main game loop setup"""
