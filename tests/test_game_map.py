@@ -104,12 +104,10 @@ class TestGameMap:
     @pytest.mark.parametrize(
         "x, y, expected",
         [
-            (0, 0, True),  # Wall - not walkable
-            (1, 1, False),  # Power pellet - walkable
-            (2, 1, False),  # Pellet - walkable
-            (9, 1, True),  # Wall - not walkable
-            (-1, 10, False),  # Out of bounds in the tunnel -> not a visual wall
-            (19, 10, False),  # Out of bounds in the tunnel -> not a visual wall
+            (0, 0, False),  # Wall - not walkable
+            (1, 1, True),  # Power pellet - walkable
+            (2, 1, True),  # Pellet - walkable
+            (9, 1, False),  # Wall - not walkable
         ],
     )
     def test_is_walkable(self, game_map, x, y, expected):
@@ -126,6 +124,15 @@ class TestGameMap:
         assert game_map.width == len(game_map.layout[0])
         assert game_map.width == 19
 
+    @pytest.mark.parametrize(
+        "x, y, expected",
+        [
+            (0, 0, True),  # Normal wall -> visual wall
+            (1, 1, False),  # Empty space or pellet -> not a visual wall
+            (-1, 10, False),  # Left tunnel out of bounds-> open path (False)
+            (19, 10, False),  # Right Tunnel out of bounds -> open path (False)
+        ],
+    )
     def test_is_visual_wall(self, game_map, x, y, expected):
         """Test the special logic for wall rendering in tunnels"""
         # Using _ to access a protected method for testing internal logic
