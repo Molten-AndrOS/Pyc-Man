@@ -157,18 +157,20 @@ class GameMap:
         b_count = b_n + b_s + b_e + b_w
 
         if b_count == 2:
-            self._draw_corner(screen, px, py, b_n, b_s, b_e, b_w, r = 8, thickness = 2)
+            self._draw_corner(screen, (px, py), (b_n, b_s, b_e, b_w), r = 8, thickness = 2)
         elif b_count != 0:
-            self._draw_dead_end(screen, px, py, b_n, b_s, b_e, b_w, r = 8, thickness = 2)
+            self._draw_dead_end(screen, (px, py), (b_n, b_s, b_e, b_w), r = 8, thickness = 2)
 
     def _draw_corner(self,
                      screen: pygame.Surface,
-                     px: int, py: int,
-                     b_n: bool, b_s: bool, b_e: bool, b_w: bool,
+                     center: tuple,
+                     boundary: tuple,
                      *,
                      r: int, thickness: int,
     ):
         """Draw corner connections between walls."""
+        px, py = center
+        b_n, b_s, b_e, b_w = boundary
         if b_n and b_s:
             pygame.draw.line(
                 screen, BLUE, (px, py - r), (px, py + r), thickness
@@ -196,12 +198,14 @@ class GameMap:
 
     def _draw_dead_end(self,
                        screen: pygame.Surface,
-                       px: int, py: int,
-                       b_n: bool, b_s: bool, b_e: bool, b_w: bool,
+                       center: tuple,
+                       boundary: tuple,
                        *,
                        r: int, thickness: int
     ):
         """Anchor lines to the grid edge for tunnel exits and dead ends."""
+        px, py = center
+        b_n, b_s, b_e, b_w = boundary
         if b_n:
             pygame.draw.line(
                 screen, BLUE, (px, py - r), (px, py), thickness
