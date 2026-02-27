@@ -4,7 +4,7 @@ import math
 
 import pygame
 
-from src.settings import BLUE, TILE_SIZE, WHITE
+from src.settings import BLUE, TILE_SIZE
 
 
 class GameMap:
@@ -105,6 +105,7 @@ class GameMap:
         screen: pygame.Surface,
         clip_rect: tuple,
         center: tuple,
+        *,
         radius: int,
         thickness: int,
     ):
@@ -120,82 +121,89 @@ class GameMap:
 
         for y in range(self.height + 1):
             for x in range(self.width + 1):
-                px, py = x * TILE_SIZE, y * TILE_SIZE
+                self._draw_cell_walls(screen, x, y, r, thickness)
 
-                # Boundary detection
-                bE = x < self.width and self._is_visual_wall(
-                    x, y - 1
-                ) != self._is_visual_wall(x, y)
-                bS = y < self.height and self._is_visual_wall(
-                    x - 1, y
-                ) != self._is_visual_wall(x, y)
-                bW = x > 0 and self._is_visual_wall(
-                    x - 1, y - 1
-                ) != self._is_visual_wall(x - 1, y)
-                bN = y > 0 and self._is_visual_wall(
-                    x - 1, y - 1
-                ) != self._is_visual_wall(x, y - 1)
+    def _draw_cell_walls(self, screen: pygame.Surface, x: int, y: int, r: int, thickness: int):
+        """Draw the walls for a specific cell intersection (Fixes R0912 branch limit)."""
+        px, py = x * TILE_SIZE, y * TILE_SIZE
 
-                # Draw straight segments
-                if bE:
-                    pygame.draw.line(
-                        screen, BLUE, (px + r, py), (px + TILE_SIZE - r, py), thickness
-                    )
-                if bS:
-                    pygame.draw.line(
-                        screen, BLUE, (px, py + r), (px, py + TILE_SIZE - r), thickness
-                    )
+        # Boundary detection
+        b_e = x < self.width and self._is_visual_wall(
+            x, y - 1
+        ) != self._is_visual_wall(x, y)
+        b_s = y < self.height and self._is_visual_wall(
+            x - 1, y
+        ) != self._is_visual_wall(x, y)
+        b_w = x > 0 and self._is_visual_wall(
+            x - 1, y - 1
+        ) != self._is_visual_wall(x - 1, y)
+        b_n = y > 0 and self._is_visual_wall(
+            x - 1, y - 1
+        ) != self._is_visual_wall(x, y - 1)
 
-                # Handle intersections and corners
-                b_count = bN + bS + bE + bW
+        # Draw straight segments
+        if b_e:
+            pygame.draw.line(
+                screen, BLUE, (px + r, py), (px + TILE_SIZE - r, py), thickness
+            )
+        if b_s:
+            pygame.draw.line(
+                screen, BLUE, (px, py + r), (px, py + TILE_SIZE - r), thickness
+            )
 
-                if b_count == 2:
-                    if bN and bS:
-                        pygame.draw.line(
-                            screen, BLUE, (px, py - r), (px, py + r), thickness
-                        )
-                    elif bE and bW:
-                        pygame.draw.line(
-                            screen, BLUE, (px - r, py), (px + r, py), thickness
-                        )
-                    elif bN and bE:
-                        self._draw_clipped_corner(
-                            screen, (px, py - r, r, r), (px + r, py - r), r, thickness
-                        )
-                    elif bN and bW:
-                        self._draw_clipped_corner(
-                            screen,
-                            (px - r, py - r, r, r),
-                            (px - r, py - r),
-                            r,
-                            thickness,
-                        )
-                    elif bS and bE:
-                        self._draw_clipped_corner(
-                            screen, (px, py, r, r), (px + r, py + r), r, thickness
-                        )
-                    elif bS and bW:
-                        self._draw_clipped_corner(
-                            screen, (px - r, py, r, r), (px - r, py + r), r, thickness
-                        )
-                elif b_count != 0:
-                    # Anchor lines to the grid edge for tunnel exits and dead ends
-                    if bN:
-                        pygame.draw.line(
-                            screen, BLUE, (px, py - r), (px, py), thickness
-                        )
-                    if bS:
-                        pygame.draw.line(
-                            screen, BLUE, (px, py + r), (px, py), thickness
-                        )
-                    if bE:
-                        pygame.draw.line(
-                            screen, BLUE, (px + r, py), (px, py), thickness
-                        )
-                    if bW:
-                        pygame.draw.line(
-                            screen, BLUE, (px - r, py), (px, py), thickness
-                        )
+        # Handle intersections and corners
+        b_count = b_n + b_s + b_e + b_w
+
+        if b_count == 2:
+            self._draw_corner(screen, px, py, r, thickness, b_n, b_s, b_e, b_w)
+        elif b_count != 0:
+            self._draw_dead_end(screen, px, py, r, thickness, b_n, b_s, b_e, b_w)
+
+    def _draw_corner(self, screen: pygame.Surface, px: int, py: int, r: int, thickness: int, b_n: bool,b_s: bool, b_e: bool, b_w: bool):
+        """Draw corner connections between walls."""
+        if b_n and b_s:
+            pygame.draw.line(
+                screen, BLUE, (px, py - r), (px, py + r), thickness
+            )
+        elif b_e and b_w:
+            pygame.draw.line(
+                screen, BLUE, (px - r, py), (px + r, py), thickness
+            )
+        elif b_n and b_e:
+            self._draw_clipped_corner(
+                screen, (px, py - r, r, r), (px + r, py - r), radius=r, thickness=thickness
+            )
+        elif b_n and b_w:
+            self._draw_clipped_corner(
+                screen, (px - r, py - r, r, r), (px - r, py - r), radius=r, thickness=thickness
+            )
+        elif b_s and b_e:
+            self._draw_clipped_corner(
+                screen, (px, py, r, r), (px + r, py + r), radius=r, thickness=thickness
+            )
+        elif b_s and b_w:
+            self._draw_clipped_corner(
+                screen, (px - r, py, r, r), (px - r, py + r), radius=r, thickness=thickness
+            )
+
+    def _draw_dead_end(self, screen: pygame.Surface, px: int, py: int, r: int, thickness: int, b_n: bool,b_s: bool, b_e: bool, b_w: bool):
+        """Anchor lines to the grid edge for tunnel exits and dead ends."""            # Anchor lines to the grid edge for tunnel exits and dead ends
+        if b_n:
+            pygame.draw.line(
+                screen, BLUE, (px, py - r), (px, py), thickness
+            )
+        if b_s:
+            pygame.draw.line(
+                screen, BLUE, (px, py + r), (px, py), thickness
+            )
+        if b_e:
+            pygame.draw.line(
+                screen, BLUE, (px + r, py), (px, py), thickness
+            )
+        if b_w:
+            pygame.draw.line(
+                screen, BLUE, (px - r, py), (px, py), thickness
+            )
 
     def _draw_pellets(self, screen: pygame.Surface):
         """Render normal and power pellets across the map."""
