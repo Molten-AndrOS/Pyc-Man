@@ -123,7 +123,8 @@ class GameMap:
             for x in range(self.width + 1):
                 self._draw_cell_walls(screen, x, y, r, thickness)
 
-    def _draw_cell_walls(self, screen: pygame.Surface, x: int, y: int, r: int, thickness: int):
+    def _draw_cell_walls(self, screen: pygame.Surface, x: int, y: int,
+                         r: int, thickness: int):
         """Draw the walls for a specific cell intersection (Fixes R0912 branch limit)."""
         px, py = x * TILE_SIZE, y * TILE_SIZE
 
@@ -159,7 +160,8 @@ class GameMap:
         elif b_count != 0:
             self._draw_dead_end(screen, px, py, r, thickness, b_n, b_s, b_e, b_w)
 
-    def _draw_corner(self, screen: pygame.Surface, px: int, py: int, r: int, thickness: int, b_n: bool,b_s: bool, b_e: bool, b_w: bool):
+    def _draw_corner(self, screen: pygame.Surface, px: int, py: int,
+                     r: int, thickness: int, b_n: bool, b_s: bool, b_e: bool, b_w: bool):
         """Draw corner connections between walls."""
         if b_n and b_s:
             pygame.draw.line(
@@ -186,7 +188,8 @@ class GameMap:
                 screen, (px - r, py, r, r), (px - r, py + r), radius=r, thickness=thickness
             )
 
-    def _draw_dead_end(self, screen: pygame.Surface, px: int, py: int, r: int, thickness: int, b_n: bool,b_s: bool, b_e: bool, b_w: bool):
+    def _draw_dead_end(self, screen: pygame.Surface, px: int, py: int,
+                       r: int, thickness: int, b_n: bool,b_s: bool, b_e: bool, b_w: bool):
         """Anchor lines to the grid edge for tunnel exits and dead ends."""            # Anchor lines to the grid edge for tunnel exits and dead ends
         if b_n:
             pygame.draw.line(
