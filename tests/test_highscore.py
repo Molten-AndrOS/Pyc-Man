@@ -101,8 +101,12 @@ def test_show_high_scores_back_navigation(mocker, mock_screen, mock_clock):
     # Mock the BACK button rectangle
     mock_rect = mocker.Mock()
     mock_rect.collidepoint.return_value = True
-    mocker.patch("pygame.font.Font")
-    mocker.patch("pygame.Surface.get_rect", return_value=mock_rect)
+
+    # Configure the mocked Font to return mocked Surface, which returns mocked Rect
+    mock_font_class = mocker.patch("pygame.font.Font")
+    mock_surface = mocker.Mock()
+    mock_surface.get_rect.return_value = mock_rect
+    mock_font_class.return_value.render.return_value = mock_surface
 
     # Simulate mouse click
     mocker.patch(

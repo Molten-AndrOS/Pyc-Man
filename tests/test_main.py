@@ -76,6 +76,7 @@ class TestMain:
         # Add integer value for pellets_eaten
         mock_pacman = mocker.MagicMock()
         mock_pacman.pellets_eaten = 0
+        mock_pacman.lives = 3
         mock_pacman_class.return_value = mock_pacman
 
         # Return "HIGH_SCORE" on the first loop iteration, then "PLAY" to break the menu loop
