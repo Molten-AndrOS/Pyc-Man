@@ -1,4 +1,5 @@
 """Unit tests for highscore module."""
+# pylint: disable=redefined-outer-name
 
 import json
 import os
@@ -6,7 +7,15 @@ import os
 import pygame
 import pytest
 
-from src.highscore import MAX_SCORES, SCORE_FILE, load_high_scores, save_high_score, _draw_scores
+from src.highscore import (
+MAX_SCORES,
+SCORE_FILE,
+load_high_scores,
+save_high_score,
+_draw_scores,
+input_name_screen,
+show_high_scores_screen
+)
 
 
 @pytest.fixture
@@ -28,7 +37,7 @@ def test_load_high_scores_no_file():
     assert load_high_scores() == []
 
 
-def test_load_high_scores_corrupted_file(tmp_path):
+def test_load_high_scores_corrupted_file():
     """Test loading with a corrupted JSON file."""
     with open(SCORE_FILE, "w", encoding="utf-8") as f:
         f.write("invalid json")
@@ -59,7 +68,6 @@ def test_save_high_score_zero_or_negative(mocker, mock_screen, mock_clock):
 
 def test_input_name_screen_interaction(mocker, mock_screen, mock_clock):
     """Test the name input logic by simulating Pygame events."""
-    from src.highscore import input_name_screen
 
     # Simulate pressing 'A', 'B', 'C' and then 'ENTER'
     mock_events = [
@@ -98,7 +106,6 @@ def test_save_high_score_full_list(mocker, mock_screen, mock_clock):
 
 def test_show_high_scores_back_navigation(mocker, mock_screen, mock_clock):
     """Test the high scores screen and exiting via click."""
-    from src.highscore import show_high_scores_screen
 
     # Mock the BACK button rectangle
     mock_rect = mocker.Mock()
@@ -139,6 +146,6 @@ def test_draw_scores_rendering(mocker, mock_screen):
     _draw_scores(mock_screen, mock_font, scores)
 
     # Verifica che la stringa formatta correttamente il numero, il nome e il punteggio
-    expected_str = f" 1.      ABC      500"
+    expected_str = " 1.      ABC      500"
     mock_font.render.assert_called_with(expected_str, True, mocker.ANY)
     assert mock_screen.blit.call_count > 0

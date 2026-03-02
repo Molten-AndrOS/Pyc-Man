@@ -2,8 +2,8 @@
 Basic tests for main module
 """
 
-from src.main import main
 import pygame
+from src.main import main
 
 
 class TestMain:

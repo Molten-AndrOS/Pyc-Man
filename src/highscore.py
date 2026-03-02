@@ -1,4 +1,5 @@
 """Module for handling high scores logic and screens."""
+# pylint: disable=duplicate-code
 
 import json
 import os

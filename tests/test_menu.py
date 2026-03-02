@@ -1,3 +1,7 @@
+"""Unit tests for the menu module."""
+# pylint: disable=redefined-outer-name
+
+
 import pygame
 import pytest
 
@@ -30,6 +34,7 @@ def mock_game_elements(mocker):
 
 def test_show_start_screen_play(mocker, mock_game_elements):
     """Test clicking the PLAY button and the hover effect."""
+    # pylint: disable=unused-argument
     _, mock_ghost = mock_game_elements
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
@@ -77,6 +82,7 @@ def test_show_start_screen_high_scores(mocker, mock_game_elements):
 
 def test_show_start_screen_quit(mocker, mock_game_elements):
     """Test that clicking the close window button (QUIT) exits the game."""
+    # pylint: disable=unused-argument
     screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
 
