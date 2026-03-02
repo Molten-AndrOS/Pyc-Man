@@ -39,7 +39,7 @@ def main() -> None:  # pylint: disable=too-many-locals
 
         if action == "PLAY":
             break  # Start game
-        elif action == "HIGH_SCORE":
+        if action == "HIGH_SCORE":
             highscore.show_high_scores_screen(screen, clock)  # show top 10 screen
 
     game_map = GameMap()

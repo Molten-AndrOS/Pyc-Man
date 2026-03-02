@@ -4,7 +4,6 @@ Basic tests for main module
 
 from src.main import main
 import pygame
-import pytest
 
 
 class TestMain:

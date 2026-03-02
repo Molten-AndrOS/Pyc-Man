@@ -1,5 +1,6 @@
+"""Main menu module"""
+
 import sys
-from tkinter.constants import LEFT
 
 import pygame
 
@@ -11,6 +12,7 @@ from src.settings import BLACK, FPS, SCREEN_HEIGHT, SCREEN_WIDTH, WHITE, YELLOW
 
 
 def show_start_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> str:
+    #pylint = disable=too-many-local-variables
     """Show main menu screen"""
 
     font_title = pygame.font.Font(None, 80)
@@ -50,7 +52,7 @@ def show_start_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> str:
                 mouse_pos = event.pos
                 if play_rect.collidepoint(mouse_pos):
                     return "PLAY"
-                elif scores_rect.collidepoint(mouse_pos):
+                if scores_rect.collidepoint(mouse_pos):
                     return "HIGH_SCORE"
 
         pacman.animate()

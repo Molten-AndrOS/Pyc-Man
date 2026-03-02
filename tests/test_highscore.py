@@ -1,3 +1,5 @@
+"""Unit tests for highscore module."""
+
 import json
 import os
 

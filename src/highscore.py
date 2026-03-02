@@ -110,7 +110,7 @@ def save_high_score(
         scores = sorted(scores, key=lambda x: x["score"], reverse=True)[:MAX_SCORES]
 
         try:
-            with open(SCORE_FILE, "w") as file:
+            with open(SCORE_FILE, "w", encoding="utf-8") as file:
                 json.dump(scores, file)
         except IOError as e:
             print(f"Error on high scores saving: {e}")
