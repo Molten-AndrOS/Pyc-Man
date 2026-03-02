@@ -66,6 +66,7 @@ def test_input_name_screen_interaction(mocker, mock_screen, mock_clock):
         mocker.Mock(type=pygame.KEYDOWN, key=pygame.K_c, unicode="C"),
         mocker.Mock(type=pygame.KEYDOWN, key=pygame.K_RETURN),
     ]
+    mocker.patch("pygame.font.Font")
     mocker.patch("pygame.event.get", side_effect=[[e] for e in mock_events] + [[]])
     mocker.patch("pygame.display.flip")
 
@@ -100,7 +101,7 @@ def test_show_high_scores_back_navigation(mocker, mock_screen, mock_clock):
     # Mock the BACK button rectangle
     mock_rect = mocker.Mock()
     mock_rect.collidepoint.return_value = True
-    mocker.patch("pygame.font.Font.render")
+    mocker.patch("pygame.font.Font")
     mocker.patch("pygame.Surface.get_rect", return_value=mock_rect)
 
     # Simulate mouse click

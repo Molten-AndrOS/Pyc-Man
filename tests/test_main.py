@@ -70,8 +70,13 @@ class TestMain:
         mock_menu = mocker.patch("src.main.menu")
         mock_highscore = mocker.patch("src.main.highscore")
         mocker.patch("src.main.GameMap")
-        mocker.patch("src.main.PacMan")
+        mock_pacman_class = mocker.patch("src.main.PacMan")
         mocker.patch("src.main.ghost_creation")
+
+        # Add integer value for pellets_eaten
+        mock_pacman = mocker.MagicMock()
+        mock_pacman.pellets_eaten = 0
+        mock_pacman_class.return_value = mock_pacman
 
         # Return "HIGH_SCORE" on the first loop iteration, then "PLAY" to break the menu loop
         mock_menu.show_start_screen.side_effect = ["HIGH_SCORE", "PLAY"]
@@ -107,6 +112,7 @@ class TestMain:
         # Set Pacman's lives to 0 to trigger game over
         mock_pacman = mocker.MagicMock()
         mock_pacman.lives = 0
+        mock_pacman.pellets_eaten = 0
         mock_pacman_class.return_value = mock_pacman
 
         main()
