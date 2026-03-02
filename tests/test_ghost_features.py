@@ -10,7 +10,7 @@ Uses pytest-mock for patching.
 import pytest
 from pytest_mock import MockerFixture
 
-from game_map import GameMap
+from src.game_map import GameMap
 from src.direction import Direction
 from src.ghost import Ghost, GhostConfig, GhostHouseState, GhostState
 from src.position import Position
