@@ -11,10 +11,10 @@ import pytest
 from src.highscore import (
     MAX_SCORES,
     SCORE_FILE,
-    load_high_scores,
-    save_high_score,
     _draw_scores,
     input_name_screen,
+    load_high_scores,
+    save_high_score,
     show_high_scores_screen,
 )
 
