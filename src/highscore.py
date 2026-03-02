@@ -111,7 +111,7 @@ def save_high_score(
         scores.append({"name": name, "score": new_score})
 
         # Sort from max to min and save top 10
-        scores = sorted(scores, key=lambda x: itn(x["score"]), reverse=True)[:MAX_SCORES]
+        scores = sorted(scores, key=lambda x: int(x["score"]), reverse=True)[:MAX_SCORES]
 
         try:
             with open(SCORE_FILE, "w", encoding="utf-8") as file:
