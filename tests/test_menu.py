@@ -1,4 +1,5 @@
 """Unit tests for the menu module."""
+
 # pylint: disable=redefined-outer-name
 
 
