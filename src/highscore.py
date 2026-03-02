@@ -1,5 +1,8 @@
+"""Module for handling high scores logic and screens."""
+
 import json
 import os
+import sys
 from typing import Dict, List, Union
 
 import pygame
@@ -17,7 +20,7 @@ def load_high_scores() -> List[Dict[str, Union[str, int]]]:
         return []
 
     try:
-        with open(SCORE_FILE, "r") as file:
+        with open(SCORE_FILE, "r", encoding="utf-8") as file:
             scores = json.load(file)
 
             processed_scores = []
@@ -43,9 +46,8 @@ def input_name_screen(
     font_input = pygame.font.Font(None, 80)
 
     name = ""
-    running = True
 
-    while running:
+    while True:
         screen.fill(BLACK)
 
         # Display title
@@ -78,20 +80,17 @@ def input_name_screen(
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
+                sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN and len(name) == 3:
                     return name
-                elif event.key == pygame.K_BACKSPACE:
+                if event.key == pygame.K_BACKSPACE:
                     name = name[:-1]
                 elif len(name) < 3 and event.unicode.isalpha():
                     name += event.unicode.upper()
 
         pygame.display.flip()
         clock.tick(FPS)
-
-    return name
-
 
 def save_high_score(
     screen: pygame.Surface, clock: pygame.time.Clock, new_score: int
@@ -116,6 +115,28 @@ def save_high_score(
         except IOError as e:
             print(f"Error on high scores saving: {e}")
 
+def _draw_scores(
+        screen: pygame.Surface, font_score: pygame.font.Font, scores: List[Dict]
+) -> None:
+    """Helper function to draw the scores list to the screen."""
+    if not scores:
+        empty_text = font_score.render("No high score yet!", True, WHITE)
+        empty_rect = empty_text.get_rect(
+            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        )
+        screen.blit(empty_text, empty_rect)
+    else:
+        for i, score_data in enumerate(scores):
+            name = score_data.get("name", "---")
+            score = score_data.get("score", 0)
+
+            # Format to align numbers properly
+            score_str = f"{i + 1:2}.      {name}      {score}"
+            text_surface = font_score.render(score_str, True, WHITE)
+            rect = text_surface.get_rect(
+                center=(SCREEN_WIDTH // 2, (SCREEN_HEIGHT // 4) + 20 + (i * 40))
+            )
+            screen.blit(text_surface, rect)
 
 def show_high_scores_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> None:
     """Show top 10 high scores screen"""
@@ -128,8 +149,7 @@ def show_high_scores_screen(screen: pygame.Surface, clock: pygame.time.Clock) ->
 
     scores = load_high_scores()
 
-    running = True
-    while running:
+    while True:
         screen.fill(BLACK)
 
         # Back button
@@ -139,7 +159,7 @@ def show_high_scores_screen(screen: pygame.Surface, clock: pygame.time.Clock) ->
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
+                sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if back_rect.collidepoint(event.pos):
                     return  # goes back to menu
@@ -152,24 +172,7 @@ def show_high_scores_screen(screen: pygame.Surface, clock: pygame.time.Clock) ->
         screen.blit(font_back.render("BACK TO MENU", True, back_color), back_rect)
 
         # Show scores
-        if not scores:
-            empty_text = font_score.render("No high score yet!", True, WHITE)
-            empty_rect = empty_text.get_rect(
-                center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-            )
-            screen.blit(empty_text, empty_rect)
-        else:
-            for i, score_data in enumerate(scores):
-                name = score_data.get("name", "---")
-                score = score_data.get("score", 0)
-
-                # Format to align numbers properly
-                score_str = f"{i + 1:2}.      {name}      {score}"
-                text_surface = font_score.render(score_str, True, WHITE)
-                rect = text_surface.get_rect(
-                    center=(SCREEN_WIDTH // 2, (SCREEN_HEIGHT // 4) + 20 + (i * 40))
-                )
-                screen.blit(text_surface, rect)
+        _draw_scores(screen, font_score, scores)
 
         pygame.display.flip()
         clock.tick(FPS)

@@ -28,6 +28,7 @@ def test_load_high_scores_no_file():
 
 def test_load_high_scores_corrupted_file(tmp_path):
     """Test loading with a corrupted JSON file."""
+    # Aggiunto encoding="utf-8" per evitare W1514
     with open(SCORE_FILE, "w", encoding="utf-8") as f:
         f.write("invalid json")
     assert load_high_scores() == []
@@ -37,6 +38,7 @@ def test_load_high_scores_corrupted_file(tmp_path):
 def test_load_high_scores_legacy_compatibility():
     """Test backward compatibility with old scores saved as simple integers."""
     legacy_data = [1000, 500]
+    # Aggiunto encoding="utf-8" per evitare W1514
     with open(SCORE_FILE, "w", encoding="utf-8") as f:
         json.dump(legacy_data, f)
 
@@ -78,6 +80,7 @@ def test_save_high_score_full_list(mocker, mock_screen, mock_clock):
     """Test inserting a record when the list is full."""
     # Create a list of 10 low scores
     initial_scores = [{"name": "OLD", "score": 10} for _ in range(MAX_SCORES)]
+    # Aggiunto encoding="utf-8" per evitare W1514
     with open(SCORE_FILE, "w", encoding="utf-8") as f:
         json.dump(initial_scores, f)
 
@@ -125,17 +128,17 @@ def test_draw_scores_rendering(mocker, mock_screen):
     mock_font = mocker.Mock(spec=pygame.font.Font)
     mock_surface = mocker.Mock()
     mock_font.render.return_value = mock_surface
-
+    
     # 1. Test con lista vuota
     _draw_scores(mock_screen, mock_font, [])
     # Verifica che venga renderizzato il testo "No high score yet!"
     mock_font.render.assert_called_with("No high score yet!", True, mocker.ANY)
-
+    
     # 2. Test con dei punteggi presenti
     mock_font.reset_mock()
     scores = [{"name": "ABC", "score": 500}]
     _draw_scores(mock_screen, mock_font, scores)
-
+    
     # Verifica che la stringa formatta correttamente il numero, il nome e il punteggio
     expected_str = f" 1.      ABC      500"
     mock_font.render.assert_called_with(expected_str, True, mocker.ANY)
