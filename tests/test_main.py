@@ -3,7 +3,6 @@ Basic tests for main module
 """
 
 from src.main import main
-import runpy
 import pygame
 import pytest
 
