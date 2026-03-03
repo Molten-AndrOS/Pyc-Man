@@ -166,7 +166,7 @@ class Ghost(ABC):
         elif self._direction == Direction.RIGHT:
             self._direction = Direction.LEFT
 
-    def set_position(self, new_x: int, new_y: int) -> None:
+    def set_position(self, new_x: float, new_y: float) -> None:
         """Set method to force ghost position"""
         self._position.x = new_x
         self._position.y = new_y
