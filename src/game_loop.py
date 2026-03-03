@@ -1,3 +1,5 @@
+"""Module that contains main functions to reset scene for gameplay loop"""
+
 from src.game_map import GameMap
 from src.settings import NUM_PELLETS, GHOST_SPEED
 from src.pacman import PacMan
@@ -32,7 +34,7 @@ def level_finished(pacman: PacMan, ghosts: list[Ghost], game_map: GameMap, timer
     """Function to reset level upon completion to continue playing"""
     if pacman.pellets_eaten >= NUM_PELLETS:
         reset_positions(pacman, ghosts)
-        game_map.__init__()
+        game_map.reset()
         pacman.pellets_eaten = 0
         timer = 0
     return timer

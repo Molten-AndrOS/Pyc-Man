@@ -41,6 +41,9 @@ class GameMap:
         ]
         self.initial_pellets = self._count_pellets()
 
+    def reset(self):
+        self.__init__()
+
     def _count_pellets(self) -> int:
         """Count total pellets in the map"""
         return sum(cell in [2, 3] for row in self.layout for cell in row)
