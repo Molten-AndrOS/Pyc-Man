@@ -9,6 +9,7 @@ from src.ghost import GhostState, GhostHouseState
 # pylint: disable=protected-access
 
 
+
 def reset_positions(pacman, ghosts):
     """Resets Pac-Man and the ghosts to their initial positions and states."""
 
@@ -34,7 +35,7 @@ def level_finished(pacman: PacMan, ghosts: list[Ghost], game_map: GameMap, timer
     """Function to reset level upon completion to continue playing"""
     if pacman.pellets_eaten >= NUM_PELLETS:
         reset_positions(pacman, ghosts)
-        game_map.reset()
+        game_map.__init__() # pylint: disable=unnecessary-dunder-call
         pacman.pellets_eaten = 0
         timer = 0
     return timer
