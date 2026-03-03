@@ -8,7 +8,7 @@ from typing import List
 
 import pygame
 
-from highscore import save_high_score
+from src.highscore import save_high_score
 from src import highscore, menu
 from src.game_map import GameMap
 from src.ghost import Ghost

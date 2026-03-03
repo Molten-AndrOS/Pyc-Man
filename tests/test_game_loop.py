@@ -3,7 +3,7 @@ import pytest
 from src.game_loop import reset_positions, level_finished, pacman_eaten
 from src.direction import Direction
 from src.ghost import GhostState, GhostHouseState
-from settings import GHOST_SPEED, NUM_PELLETS
+from src.settings import GHOST_SPEED, NUM_PELLETS
 
 
 @pytest.fixture
