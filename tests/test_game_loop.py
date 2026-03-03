@@ -48,6 +48,7 @@ def mock_ghost_inky(mocker):
 def mock_game_map(mocker):
     """Provides a mocked GameMap instance."""
     class MockGameMap:
+        """Mocked GameMap instance"""
         def __init__(self):
             pass
 

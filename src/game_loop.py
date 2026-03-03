@@ -29,6 +29,7 @@ def reset_positions(pacman, ghosts):
 
 
 def level_finished(pacman: PacMan, ghosts: list[Ghost], game_map: GameMap, timer: int) -> int:
+    """Function to reset level upon completion to continue playing"""
     if pacman.pellets_eaten >= NUM_PELLETS:
         reset_positions(pacman, ghosts)
         game_map.__init__()
@@ -37,6 +38,7 @@ def level_finished(pacman: PacMan, ghosts: list[Ghost], game_map: GameMap, timer
     return timer
 
 def pacman_eaten(pacman: PacMan, ghosts: list[Ghost]) -> None:
+    """Function to reset entities postion when pacman is eaten and it still has extra lives"""
     if pacman.is_dead:
         # Reset Ghosts' positions and states
         for ghost in ghosts:
@@ -49,10 +51,3 @@ def pacman_eaten(pacman: PacMan, ghosts: list[Ghost]) -> None:
             else:
                 ghost._house_state = GhostHouseState.IN_HOUSE
     pacman.is_dead= False
-
-
-
-
-
-
-
