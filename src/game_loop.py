@@ -1,5 +1,5 @@
-from game_map import GameMap
-from settings import NUM_PELLETS, GHOST_SPEED
+from src.game_map import GameMap
+from src.settings import NUM_PELLETS, GHOST_SPEED
 from src.pacman import PacMan
 from src.ghost import Ghost
 from src.direction import Direction
