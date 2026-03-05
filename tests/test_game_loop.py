@@ -6,7 +6,7 @@
 import pytest
 
 from src.direction import Direction
-from src.game_loop import level_finished, pacman_eaten, reset_positions
+from src.game_loop import level_finished, pacman_eaten, reset_positions, reset_ghosts_position
 from src.ghost import GhostHouseState, GhostState
 from src.settings import GHOST_SPEED, NUM_PELLETS
 
@@ -52,12 +52,12 @@ def mock_game_map(mocker):
     class MockGameMap:
         """Mocked GameMap instance"""
 
-        def __init__(self):
+        def reset(self):
             pass
 
     game_map = MockGameMap()
-    # Spy on the __init__ method to verify it gets called
-    mocker.spy(game_map, "__init__")
+    # Spy on the reset method to verify it gets called
+    mocker.spy(game_map, "reset")
     return game_map
 
 
@@ -74,17 +74,26 @@ def test_reset_positions(mock_pacman, mock_ghost_blinky, mock_ghost_inky):
     assert mock_pacman.direction == Direction.NONE
     assert mock_pacman.next_direction == Direction.NONE
 
+
+
+def test_reset_ghosts_position(mock_ghost_blinky, mock_ghost_inky):
+    """Test that resetting positions and states correctly updates all ghosts."""
+    ghosts = [mock_ghost_blinky, mock_ghost_inky]
+
+    #Execute
+    reset_ghosts_position(ghosts)
+
     # Assert Blinky is reset and gets the ACTIVE house state
     mock_ghost_blinky.set_position.assert_called_once_with(20, 20)
-    assert mock_ghost_blinky._state == GhostState.SCATTER
-    assert mock_ghost_blinky._speed == GHOST_SPEED
-    assert mock_ghost_blinky._house_state == GhostHouseState.ACTIVE
+    mock_ghost_blinky.set_state.assert_called_once_with(GhostState.SCATTER)
+    mock_ghost_blinky.set_house_state.assert_called_once_with(GhostHouseState.ACTIVE)
+    mock_ghost_blinky.reset_frightened_timer.assert_called_once()
 
     # Assert Inky is reset and gets the IN_HOUSE house state
     mock_ghost_inky.set_position.assert_called_once_with(30, 30)
-    assert mock_ghost_inky._state == GhostState.SCATTER
-    assert mock_ghost_inky._speed == GHOST_SPEED
-    assert mock_ghost_inky._house_state == GhostHouseState.IN_HOUSE
+    mock_ghost_inky.set_state.assert_called_once_with(GhostState.SCATTER)
+    mock_ghost_inky.set_house_state.assert_called_once_with(GhostHouseState.IN_HOUSE)
+    mock_ghost_inky.reset_frightened_timer.assert_called_once()
 
 
 def test_level_finished_not_complete(
@@ -106,7 +115,7 @@ def test_level_finished_not_complete(
     assert result == 50
     assert mock_pacman.pellets_eaten == NUM_PELLETS - 1
     mock_reset_positions.assert_not_called()
-    mock_game_map.__init__.assert_not_called()
+    mock_game_map.reset.assert_not_called()
 
 
 def test_level_finished_complete(mocker, mock_pacman, mock_ghost_blinky, mock_game_map):
@@ -126,7 +135,7 @@ def test_level_finished_complete(mocker, mock_pacman, mock_ghost_blinky, mock_ga
     assert result == 0  # Timer is reset to 0
     assert mock_pacman.pellets_eaten == 0  # Pellets are reset
     mock_reset_positions.assert_called_once_with(mock_pacman, ghosts)
-    mock_game_map.__init__.assert_called_once()
+    mock_game_map.reset.assert_called_once()
 
 
 def test_pacman_eaten_when_dead(mock_pacman, mock_ghost_blinky, mock_ghost_inky):
@@ -140,15 +149,15 @@ def test_pacman_eaten_when_dead(mock_pacman, mock_ghost_blinky, mock_ghost_inky)
 
     # Assert Blinky is reset and gets the ACTIVE house state
     mock_ghost_blinky.set_position.assert_called_once_with(20, 20)
-    assert mock_ghost_blinky._state == GhostState.SCATTER
-    assert mock_ghost_blinky._speed == GHOST_SPEED
-    assert mock_ghost_blinky._house_state == GhostHouseState.ACTIVE
+    mock_ghost_blinky.set_state.assert_called_once_with(GhostState.SCATTER)
+    mock_ghost_blinky.set_house_state.assert_called_once_with(GhostHouseState.ACTIVE)
+    mock_ghost_blinky.reset_frightened_timer.assert_called_once()
 
     # Assert Inky is reset and gets the IN_HOUSE house state
     mock_ghost_inky.set_position.assert_called_once_with(30, 30)
-    assert mock_ghost_inky._state == GhostState.SCATTER
-    assert mock_ghost_inky._speed == GHOST_SPEED
-    assert mock_ghost_inky._house_state == GhostHouseState.IN_HOUSE
+    mock_ghost_inky.set_state.assert_called_once_with(GhostState.SCATTER)
+    mock_ghost_inky.set_house_state.assert_called_once_with(GhostHouseState.IN_HOUSE)
+    mock_ghost_inky.reset_frightened_timer.assert_called_once()
 
     # Assert Pac-Man is revived (is_dead set to False)
     assert mock_pacman.is_dead is False

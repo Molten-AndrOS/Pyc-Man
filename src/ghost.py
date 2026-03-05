@@ -140,6 +140,10 @@ class Ghost(ABC):
         if reverse_direction:
             self._reverse_direction()
 
+    def set_house_state(self, new_state: GhostHouseState) -> None:
+        """Set the ghost house state."""
+        self._house_state = new_state
+
     def start_frightened(self) -> None:
         """Activate frightened state."""
         if self._state not in [GhostState.EATEN, GhostState.FRIGHTENED]:
@@ -168,6 +172,10 @@ class Ghost(ABC):
         """Set method to force ghost position"""
         self._position.x = new_x
         self._position.y = new_y
+
+    def reset_frightened_timer(self):
+        """Set frightened timer to 0"""
+        self._frightened_timer = 0
 
     def update(
         self, pacman_x: float, pacman_y: float, pacman_direction: Tuple[int, int]

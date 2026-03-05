@@ -14,6 +14,9 @@ class GameMap:
     tunnel_right_position = (18, 10)
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         # 1 = wall, 0 = path, 2 = pellet, 3 = power pellet
         self.layout = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
