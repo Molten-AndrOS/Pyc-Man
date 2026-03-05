@@ -8,7 +8,7 @@ import pytest
 from src.direction import Direction
 from src.game_loop import level_finished, pacman_eaten, reset_positions, reset_ghosts_position
 from src.ghost import GhostHouseState, GhostState
-from src.settings import GHOST_SPEED, NUM_PELLETS
+from src.settings import NUM_PELLETS
 
 
 @pytest.fixture
@@ -53,6 +53,7 @@ def mock_game_map(mocker):
         """Mocked GameMap instance"""
 
         def reset(self):
+            """Mocked reset function"""
             pass
 
     game_map = MockGameMap()

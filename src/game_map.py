@@ -17,6 +17,7 @@ class GameMap:
         self.reset()
 
     def reset(self):
+        """Public method to reset map"""
         # 1 = wall, 0 = path, 2 = pellet, 3 = power pellet
         self.layout = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],

@@ -4,7 +4,7 @@ from src.direction import Direction
 from src.game_map import GameMap
 from src.ghost import Ghost, GhostHouseState, GhostState
 from src.pacman import PacMan
-from src.settings import GHOST_SPEED, NUM_PELLETS
+from src.settings import NUM_PELLETS
 
 def reset_positions(pacman: PacMan, ghosts: list[Ghost]) -> None:
     """Resets Pac-Man and the ghosts to their initial positions and states."""
