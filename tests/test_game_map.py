@@ -8,8 +8,8 @@ Test suite for GameMap class
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-public-methods
 
-import pytest
 import pygame
+import pytest
 
 from src.game_map import GameMap
 
@@ -19,11 +19,11 @@ def game_map():
     """Provide a fresh GameMap instance for each test"""
     return GameMap()
 
+
 @pytest.fixture
 def mock_screen(mocker):
     """Provide a mocked Pygame surface"""
     return mocker.Mock(spec=pygame.Surface)
-
 
 
 class TestGameMap:
@@ -159,8 +159,8 @@ class TestGameMap:
 
     def test_draw(self, game_map, mocker, mock_screen):
         """Test that draw coordinates the main rendering methods."""
-        mock_draw_walls = mocker.patch.object(game_map, '_draw_walls')
-        mock_draw_pellets = mocker.patch.object(game_map, '_draw_pellets')
+        mock_draw_walls = mocker.patch.object(game_map, "_draw_walls")
+        mock_draw_pellets = mocker.patch.object(game_map, "_draw_pellets")
 
         game_map.draw(mock_screen)
 
@@ -169,7 +169,7 @@ class TestGameMap:
 
     def test_draw_clipped_corner(self, game_map, mocker, mock_screen):
         """Test the clipped corner rendering bounds and logic."""
-        mock_circle = mocker.patch('pygame.draw.circle')
+        mock_circle = mocker.patch("pygame.draw.circle")
 
         clip_rect = (0, 0, 10, 10)
         center = (5, 5)
@@ -184,8 +184,8 @@ class TestGameMap:
 
     def test_draw_walls_coverage(self, game_map, mocker, mock_screen):
         """Test _draw_walls executes completely over the map and calls rendering internals."""
-        mocker.patch('pygame.draw.line')
-        mocker.patch('pygame.draw.circle')
+        mocker.patch("pygame.draw.line")
+        mocker.patch("pygame.draw.circle")
 
         # Traverse the entire default layout map layout and trigger all _draw_cell_walls branches
         game_map._draw_walls(mock_screen)
@@ -203,8 +203,13 @@ class TestGameMap:
         ],
     )
     def test_draw_corner(
-            self, game_map, mocker, mock_screen, boundary,
-            expected_line_calls, expected_clipped_calls
+        self,
+        game_map,
+        mocker,
+        mock_screen,
+        boundary,
+        expected_line_calls,
+        expected_clipped_calls,
     ):
         """Test explicit branching combinations mapped inside _draw_corner."""
         mock_line = mocker.patch("pygame.draw.line")
@@ -227,7 +232,7 @@ class TestGameMap:
         ],
     )
     def test_draw_dead_end(
-            self, game_map, mocker, mock_screen, boundary, expected_line_calls
+        self, game_map, mocker, mock_screen, boundary, expected_line_calls
     ):
         """Test explicit branching connections mapped inside _draw_dead_end."""
         mock_line = mocker.patch("pygame.draw.line")
