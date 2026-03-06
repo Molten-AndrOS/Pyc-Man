@@ -7,6 +7,7 @@ Test suite for Ghost classes.
 
 from dataclasses import dataclass
 from typing import Tuple
+from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
@@ -36,7 +37,7 @@ class FrightenedTestCase:
 
 
 @pytest.fixture
-def mock_game_map(mocker: MockerFixture) -> GameMap:
+def mock_game_map(mocker: MockerFixture) -> MagicMock:
     """Create a mocked GameMap for testing."""
     mock_map = mocker.Mock(spec=GameMap)
     mock_map.pixel_to_grid.return_value = (5, 5)
@@ -59,7 +60,7 @@ def ghost_config() -> GhostConfig:
 
 
 @pytest.fixture
-def concrete_ghost(mock_game_map: GameMap, ghost_config: GhostConfig) -> Ghost:
+def concrete_ghost(mock_game_map: MagicMock, ghost_config: GhostConfig) -> Ghost:
     """Create a concrete Ghost implementation for testing"""
 
     class ConcreteGhost(Ghost):
@@ -418,7 +419,9 @@ def difficulty_manager_level_3():
 
 @pytest.fixture
 def concrete_ghost_with_difficulty(
-    mock_game_map: GameMap, ghost_config: GhostConfig, difficulty_manager_level_1: DifficultyManager
+    mock_game_map: MagicMock,
+    ghost_config: GhostConfig,
+    difficulty_manager_level_1: DifficultyManager,
 ) -> Ghost:
     """Create a concrete Ghost implementation with difficulty manager for testing."""
 
@@ -492,7 +495,7 @@ def test_start_frightened_without_difficulty_manager(concrete_ghost: Ghost):
 
 
 def test_chase_speed_multiplier_applied_in_move(
-    concrete_ghost_with_difficulty: Ghost, mock_game_map: GameMap
+    concrete_ghost_with_difficulty: Ghost, mock_game_map: MagicMock
 ):
     """Test that CHASE mode speed multiplier is applied during movement."""
     concrete_ghost_with_difficulty._state = GhostState.CHASE
@@ -553,7 +556,7 @@ def test_return_to_house_uses_difficulty_manager_speed(concrete_ghost_with_diffi
     assert concrete_ghost_with_difficulty._house_state == GhostHouseState.IN_HOUSE
 
 
-def test_high_level_ghost_has_correct_speed(mock_game_map: GameMap, ghost_config: GhostConfig):
+def test_high_level_ghost_has_correct_speed(mock_game_map: MagicMock, ghost_config: GhostConfig):
     """Test that high level ghost has correct speed calculation."""
     high_level_difficulty = DifficultyManager(level=5)
 
@@ -580,7 +583,7 @@ def test_high_level_ghost_has_correct_speed(mock_game_map: GameMap, ghost_config
 
 
 def test_high_level_ghost_has_correct_frightened_duration(
-    mock_game_map: GameMap, ghost_config: GhostConfig
+    mock_game_map: MagicMock, ghost_config: GhostConfig
 ):
     """Test that high level ghost has reduced frightened duration."""
     high_level_difficulty = DifficultyManager(level=5)
