@@ -1,11 +1,15 @@
 """Unit tests for key_handler.py"""
+
 # pylint: disable=no-member
 
 import pygame
-from src.key_handler import wants_to_run, wants_to_pause
+
+from src.key_handler import wants_to_pause, wants_to_run
+
 
 class TestWantsToRun:
     """Class for testing the wants_to_run function"""
+
     def test_wants_to_run_empty_events(self):
         """Test when events is empty"""
         events = []
@@ -20,13 +24,14 @@ class TestWantsToRun:
         """Test when event is quit"""
         events = [
             pygame.event.Event(pygame.MOUSEMOTION),
-            pygame.event.Event(pygame.QUIT)
+            pygame.event.Event(pygame.QUIT),
         ]
         assert wants_to_run(events) is False
 
 
 class TestWantsToPause:
     """Class for testing the wants_to_pause function"""
+
     def test_wants_to_pause_empty_events(self):
         """Test when events is empty"""
         events = []

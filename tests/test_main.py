@@ -7,7 +7,8 @@ import pytest
 
 from src.main import main
 
-#pylint: disable=no-member
+# pylint: disable=no-member
+
 
 class TestMain:
     """Tests for main functions"""
